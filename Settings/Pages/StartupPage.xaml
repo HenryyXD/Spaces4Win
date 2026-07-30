@@ -1,0 +1,67 @@
+<Page x:Class="Spaces4Win.Settings.Pages.StartupPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:controls="clr-namespace:Spaces4Win.Settings.Controls">
+    <Border Padding="28,20,28,24">
+        <StackPanel MaxWidth="{StaticResource SettingsContentMaxWidth}">
+            <controls:PageHeader DataContext="{Binding}" />
+
+            <Border Style="{StaticResource SettingsRow}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Loc[Settings.Startup.StartWithWindows.Title]}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Loc[Settings.Startup.StartWithWindows.Description]}" Style="{StaticResource SettingsSecondaryText}" />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource SettingsCard}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Loc[Settings.Administration.Status]}"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                        <Border Grid.Column="1" Style="{StaticResource StatusBadge}" Margin="12,0,0,0">
+                            <TextBlock Text="{Binding ElevationBadgeText}" Style="{StaticResource StatusBadgeText}" />
+                        </Border>
+                    </Grid>
+
+                    <RadioButton GroupName="Elevation" Margin="0,0,0,4" IsChecked="{Binding IsAsk, Mode=TwoWay}"
+                                 Content="{Binding Loc[Settings.Administration.Ask]}" />
+                    <TextBlock Text="{Binding Loc[Settings.Administration.Ask.Desc]}" Style="{StaticResource SettingsSecondaryText}" Margin="24,0,0,10" />
+
+                    <RadioButton GroupName="Elevation" Margin="0,0,0,4" IsChecked="{Binding IsAlways, Mode=TwoWay}"
+                                 Content="{Binding Loc[Settings.Administration.Always]}" />
+                    <TextBlock Text="{Binding Loc[Settings.Administration.Always.Desc]}" Style="{StaticResource SettingsSecondaryText}" Margin="24,0,0,10" />
+
+                    <RadioButton GroupName="Elevation" Margin="0,0,0,4" IsChecked="{Binding IsNever, Mode=TwoWay}"
+                                 Content="{Binding Loc[Settings.Administration.Never]}" />
+                    <TextBlock Text="{Binding Loc[Settings.Administration.Never.Desc]}" Style="{StaticResource SettingsSecondaryText}" Margin="24,0,0,12" />
+
+                    <ui:Button Content="{Binding Loc[Settings.Administration.RestartButton]}"
+                               Appearance="Secondary"
+                               HorizontalAlignment="Left"
+                               Command="{Binding RestartElevatedCommand}"
+                               Margin="0,0,0,12" />
+
+                    <Expander Header="{Binding Loc[Settings.Administration.WhyTitle]}">
+                        <TextBlock Text="{Binding Loc[Settings.Administration.WhyBody]}"
+                                   Style="{StaticResource SettingsSecondaryText}"
+                                   Margin="0,8,0,0" />
+                    </Expander>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</Page>

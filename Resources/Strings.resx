@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="App.Name" xml:space="preserve"><value>Spaces4Win</value></data>
+  <data name="App.Tray.Tooltip" xml:space="preserve"><value>Spaces4Win — per-monitor workspaces</value></data>
+  <data name="App.Tray.TooltipAdmin" xml:space="preserve"><value>Spaces4Win — per-monitor workspaces (Administrator)</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>Settings…</value></data>
+  <data name="Tray.MoveIndicators" xml:space="preserve"><value>Move indicators</value></data>
+  <data name="Tray.FinishMoveIndicators" xml:space="preserve"><value>Finish moving</value></data>
+  <data name="Tray.Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Common.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common.Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="Common.Discard" xml:space="preserve"><value>Discard</value></data>
+  <data name="Common.Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="Common.Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Common.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Common.RestoreDefault" xml:space="preserve"><value>Restore default</value></data>
+  <data name="Common.Primary" xml:space="preserve"><value>Primary</value></data>
+  <data name="Common.Secondary" xml:space="preserve"><value>Secondary</value></data>
+  <data name="Common.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Common.ComingSoon" xml:space="preserve"><value>Coming soon</value></data>
+  <data name="Common.Saved" xml:space="preserve"><value>Settings saved.</value></data>
+  <data name="Common.SaveFailed" xml:space="preserve"><value>Could not save settings: {0}</value></data>
+  <data name="Common.PendingChanges" xml:space="preserve"><value>You have unsaved changes.</value></data>
+  <data name="Settings.Navigation.Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Settings.Navigation.Workspaces" xml:space="preserve"><value>Workspaces</value></data>
+  <data name="Settings.Navigation.Hotkeys" xml:space="preserve"><value>Hotkeys</value></data>
+  <data name="Settings.Navigation.Indicators" xml:space="preserve"><value>Indicator</value></data>
+  <data name="Settings.Navigation.Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Settings.Navigation.Behavior" xml:space="preserve"><value>Behavior</value></data>
+  <data name="Settings.Navigation.Startup" xml:space="preserve"><value>Startup &amp; permissions</value></data>
+  <data name="Settings.Navigation.About" xml:space="preserve"><value>About</value></data>
+  <data name="Settings.Overview.Title" xml:space="preserve"><value>Overview</value></data>
+  <data name="Settings.Overview.Description" xml:space="preserve"><value>Manage independent workspaces on each monitor.</value></data>
+  <data name="Settings.Overview.Monitors" xml:space="preserve"><value>Monitors</value></data>
+  <data name="Settings.Overview.MonitorsHint" xml:space="preserve"><value>The filled circle is the active workspace.</value></data>
+  <data name="Settings.Overview.QuickAccess" xml:space="preserve"><value>Quick access</value></data>
+  <data name="Settings.Overview.IndicatorStatus" xml:space="preserve"><value>Floating indicator</value></data>
+  <data name="Settings.Overview.IndicatorStatus.Desc" xml:space="preserve"><value>Shows existing workspaces on each monitor.</value></data>
+  <data name="Settings.Overview.Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings.Overview.Language.Desc" xml:space="preserve"><value>Changes interface text.</value></data>
+  <data name="Settings.Overview.StartWithWindows" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="Settings.Overview.StartWithWindows.Desc" xml:space="preserve"><value>Run Spaces4Win after you sign in.</value></data>
+  <data name="Settings.Overview.WorkspaceCount.One" xml:space="preserve"><value>{0} workspace</value></data>
+  <data name="Settings.Overview.WorkspaceCount.Many" xml:space="preserve"><value>{0} workspaces</value></data>
+  <data name="Settings.Overview.ActiveLabel" xml:space="preserve"><value>Active: {0}</value></data>
+  <data name="Settings.Overview.Resolution" xml:space="preserve"><value>{0} × {1}</value></data>
+  <data name="Workspace.WindowCount.One" xml:space="preserve"><value>{0} window</value></data>
+  <data name="Workspace.WindowCount.Many" xml:space="preserve"><value>{0} windows</value></data>
+  <data name="Workspace.StickyCount.One" xml:space="preserve"><value>{0} sticky window</value></data>
+  <data name="Workspace.StickyCount.Many" xml:space="preserve"><value>{0} sticky windows</value></data>
+  <data name="Language.System" xml:space="preserve"><value>Use system language</value></data>
+  <data name="Language.English" xml:space="preserve"><value>English</value></data>
+  <data name="Language.PortugueseBrazil" xml:space="preserve"><value>Portuguese (Brazil)</value></data>
+  <data name="Settings.Workspaces.Title" xml:space="preserve"><value>Workspaces</value></data>
+  <data name="Settings.Workspaces.Description" xml:space="preserve"><value>Sparse workspaces are created when you press Caps Lock + a number.</value></data>
+  <data name="Settings.Workspaces.HowItWorks" xml:space="preserve"><value>How it works</value></data>
+  <data name="Settings.Workspaces.Hint.Access" xml:space="preserve"><value>Caps Lock + 1–9 switches to that workspace on the monitor under the cursor.</value></data>
+  <data name="Settings.Workspaces.Hint.Create" xml:space="preserve"><value>If the number does not exist, it is created on demand.</value></data>
+  <data name="Settings.Workspaces.Hint.Sparse" xml:space="preserve"><value>Intermediate numbers are not created automatically.</value></data>
+  <data name="Settings.Workspaces.Delete" xml:space="preserve"><value>Delete active workspace</value></data>
+  <data name="Settings.Workspaces.Delete.Desc" xml:space="preserve"><value>Windows move to workspace {0}.</value></data>
+  <data name="Settings.Workspaces.Delete.Blocked" xml:space="preserve"><value>Cannot delete the only workspace on this monitor.</value></data>
+  <data name="Settings.Workspaces.Delete.Confirm" xml:space="preserve"><value>Delete workspace {0}? Windows will move to workspace {1}.</value></data>
+  <data name="Settings.Hotkeys.Title" xml:space="preserve"><value>Hotkeys</value></data>
+  <data name="Settings.Hotkeys.Description" xml:space="preserve"><value>Keyboard shortcuts for Spaces4Win.</value></data>
+  <data name="Settings.Hotkeys.Category.Navigation" xml:space="preserve"><value>Navigation</value></data>
+  <data name="Settings.Hotkeys.Category.Move" xml:space="preserve"><value>Move windows</value></data>
+  <data name="Settings.Hotkeys.Category.Sticky" xml:space="preserve"><value>Sticky</value></data>
+  <data name="Settings.Hotkeys.Category.Workspace" xml:space="preserve"><value>Workspace</value></data>
+  <data name="Settings.Hotkeys.Category.Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Settings.Hotkeys.Category.App" xml:space="preserve"><value>Application</value></data>
+  <data name="Settings.Hotkeys.Switch.Name" xml:space="preserve"><value>Switch to workspace {0}</value></data>
+  <data name="Settings.Hotkeys.Switch.Desc" xml:space="preserve"><value>Switch or create workspace {0} on the monitor under the cursor.</value></data>
+  <data name="Settings.Hotkeys.Move.Name" xml:space="preserve"><value>Move window to workspace {0}</value></data>
+  <data name="Settings.Hotkeys.Move.Desc" xml:space="preserve"><value>Move the focused window to workspace {0} (stay on the current workspace).</value></data>
+  <data name="Settings.Hotkeys.MoveFollow.Name" xml:space="preserve"><value>Move window and follow to workspace {0}</value></data>
+  <data name="Settings.Hotkeys.MoveFollow.Desc" xml:space="preserve"><value>Move the focused window to workspace {0} and switch there with it.</value></data>
+  <data name="Settings.Hotkeys.ShiftLeft.Name" xml:space="preserve"><value>Insert workspace left</value></data>
+  <data name="Settings.Hotkeys.ShiftLeft.Desc" xml:space="preserve"><value>Move the focused window into a new workspace to the left, renumber, and stay on the current workspace.</value></data>
+  <data name="Settings.Hotkeys.ShiftRight.Name" xml:space="preserve"><value>Insert workspace right</value></data>
+  <data name="Settings.Hotkeys.ShiftRight.Desc" xml:space="preserve"><value>Move the focused window into a new workspace to the right, renumber, and stay on the current workspace.</value></data>
+  <data name="Settings.Hotkeys.ShiftFollowLeft.Name" xml:space="preserve"><value>Insert workspace left and follow</value></data>
+  <data name="Settings.Hotkeys.ShiftFollowLeft.Desc" xml:space="preserve"><value>Insert a new workspace to the left with the focused window, renumber, and switch there.</value></data>
+  <data name="Settings.Hotkeys.ShiftFollowRight.Name" xml:space="preserve"><value>Insert workspace right and follow</value></data>
+  <data name="Settings.Hotkeys.ShiftFollowRight.Desc" xml:space="preserve"><value>Insert a new workspace to the right with the focused window, renumber, and switch there.</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentLeft.Name" xml:space="preserve"><value>Move window to previous workspace</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentLeft.Desc" xml:space="preserve"><value>Move the focused window to the previous existing workspace without switching. Does nothing at the edge.</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentRight.Name" xml:space="preserve"><value>Move window to next workspace</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentRight.Desc" xml:space="preserve"><value>Move the focused window to the next existing workspace without switching. Does nothing at the edge.</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentFollowLeft.Name" xml:space="preserve"><value>Move window left and follow</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentFollowLeft.Desc" xml:space="preserve"><value>Move the focused window to the previous workspace and switch there. Creates a new workspace at the left edge.</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentFollowRight.Name" xml:space="preserve"><value>Move window right and follow</value></data>
+  <data name="Settings.Hotkeys.MoveAdjacentFollowRight.Desc" xml:space="preserve"><value>Move the focused window to the next workspace and switch there. Creates a new workspace at the right edge.</value></data>
+  <data name="Settings.Hotkeys.Last.Name" xml:space="preserve"><value>Last workspace</value></data>
+  <data name="Settings.Hotkeys.Last.Desc" xml:space="preserve"><value>Tap to toggle the previous workspace. Hold CapsLock and press Tab again to cycle through workspaces.</value></data>
+  <data name="Settings.Hotkeys.WindowSwitcher.Name" xml:space="preserve"><value>Window switcher</value></data>
+  <data name="Settings.Hotkeys.WindowSwitcher.Desc" xml:space="preserve"><value>Hold CapsLock+Q to cycle windows on the current workspace (release CapsLock to activate). Tap once to flip between the two most recent.</value></data>
+  <data name="Settings.Hotkeys.Previous.Name" xml:space="preserve"><value>Previous workspace</value></data>
+  <data name="Settings.Hotkeys.Previous.Desc" xml:space="preserve"><value>Switch to the previous existing workspace. Does nothing if none.</value></data>
+  <data name="Settings.Hotkeys.Next.Name" xml:space="preserve"><value>Next workspace</value></data>
+  <data name="Settings.Hotkeys.Next.Desc" xml:space="preserve"><value>Switch to the next existing workspace. Does nothing if none.</value></data>
+  <data name="Settings.Hotkeys.FocusPrevMonitor.Name" xml:space="preserve"><value>Focus previous monitor</value></data>
+  <data name="Settings.Hotkeys.FocusPrevMonitor.Desc" xml:space="preserve"><value>Move the cursor to the previous monitor so workspace hotkeys target that display.</value></data>
+  <data name="Settings.Hotkeys.FocusNextMonitor.Name" xml:space="preserve"><value>Focus next monitor</value></data>
+  <data name="Settings.Hotkeys.FocusNextMonitor.Desc" xml:space="preserve"><value>Move the cursor to the next monitor so workspace hotkeys target that display.</value></data>
+  <data name="Settings.Hotkeys.Compact.Name" xml:space="preserve"><value>Compact workspaces</value></data>
+  <data name="Settings.Hotkeys.Compact.Desc" xml:space="preserve"><value>Renumber sparse workspace ids densely to 1…N on the target monitor.</value></data>
+  <data name="Settings.Hotkeys.Fullscreen.Name" xml:space="preserve"><value>Toggle fullscreen</value></data>
+  <data name="Settings.Hotkeys.Fullscreen.Desc" xml:space="preserve"><value>Enter or exit borderless fullscreen for the focused window (stays on the current workspace).</value></data>
+  <data name="Settings.Hotkeys.MoveFree.Name" xml:space="preserve"><value>Send to free workspace</value></data>
+  <data name="Settings.Hotkeys.MoveFree.Desc" xml:space="preserve"><value>Move the focused window to a free workspace without switching to it.</value></data>
+  <data name="Settings.Hotkeys.MoveFreeFollow.Name" xml:space="preserve"><value>Send to free workspace and follow</value></data>
+  <data name="Settings.Hotkeys.MoveFreeFollow.Desc" xml:space="preserve"><value>Move the focused window to a free workspace and switch to that workspace.</value></data>
+  <data name="Settings.Hotkeys.Delete.Name" xml:space="preserve"><value>Delete workspace</value></data>
+  <data name="Settings.Hotkeys.Delete.Desc" xml:space="preserve"><value>Delete the active workspace and move its windows.</value></data>
+  <data name="Settings.Hotkeys.Overview.Name" xml:space="preserve"><value>Overview</value></data>
+  <data name="Settings.Hotkeys.Overview.Desc" xml:space="preserve"><value>Open the workspace overview on all monitors.</value></data>
+  <data name="Settings.Hotkeys.Sticky.Name" xml:space="preserve"><value>Toggle sticky</value></data>
+  <data name="Settings.Hotkeys.Sticky.Desc" xml:space="preserve"><value>Keep the focused window visible on all workspaces.</value></data>
+  <data name="Settings.Hotkeys.Conflict" xml:space="preserve"><value>Conflict</value></data>
+  <data name="Settings.Hotkeys.EditSoon" xml:space="preserve"><value>Editing will be available in a future update.</value></data>
+  <data name="Settings.Indicators.Title" xml:space="preserve"><value>Indicator</value></data>
+  <data name="Settings.Indicators.Description" xml:space="preserve"><value>Floating workspace dots on each monitor.</value></data>
+  <data name="Settings.Indicators.Enabled.Title" xml:space="preserve"><value>Show floating indicator</value></data>
+  <data name="Settings.Indicators.Enabled.Description" xml:space="preserve"><value>Display a compact overlay with existing workspaces.</value></data>
+  <data name="Settings.Indicators.Opacity.Title" xml:space="preserve"><value>Opacity</value></data>
+  <data name="Settings.Indicators.Opacity.Description" xml:space="preserve"><value>How transparent the indicator capsule appears.</value></data>
+  <data name="Settings.Indicators.Scale.Title" xml:space="preserve"><value>Size</value></data>
+  <data name="Settings.Indicators.Scale.Description" xml:space="preserve"><value>Scale of the indicator relative to the default size.</value></data>
+  <data name="Settings.Indicators.Animations.Title" xml:space="preserve"><value>Animations</value></data>
+  <data name="Settings.Indicators.Animations.Description" xml:space="preserve"><value>Briefly highlight the active workspace when switching.</value></data>
+  <data name="Settings.Indicators.Fullscreen.Title" xml:space="preserve"><value>Hide in fullscreen</value></data>
+  <data name="Settings.Indicators.Fullscreen.Description" xml:space="preserve"><value>Temporarily hide the indicator over exclusive fullscreen apps (experimental).</value></data>
+  <data name="Settings.Indicators.PinnedMode.Title" xml:space="preserve"><value>Pinned window indicator</value></data>
+  <data name="Settings.Indicators.PinnedMode.Description" xml:space="preserve"><value>How the floating indicator shows that the active window is pinned across workspaces.</value></data>
+  <data name="Settings.Indicators.PinnedMode.RingOnly" xml:space="preserve"><value>Ring only</value></data>
+  <data name="Settings.Indicators.PinnedMode.RingPlusG" xml:space="preserve"><value>Ring + G</value></data>
+  <data name="Settings.Indicators.Move" xml:space="preserve"><value>Move indicators</value></data>
+  <data name="Settings.Indicators.Finish" xml:space="preserve"><value>Finish moving</value></data>
+  <data name="Settings.Indicators.ResetPositions" xml:space="preserve"><value>Restore positions</value></data>
+  <data name="Settings.Indicators.Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Settings.Indicators.MoveHint" xml:space="preserve"><value>Drag the indicators, then press the same button again to finish. Esc cancels.</value></data>
+  <data name="Settings.Appearance.Title" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Settings.Appearance.Description" xml:space="preserve"><value>Theme and motion preferences.</value></data>
+  <data name="Settings.Appearance.Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Settings.Appearance.Theme.System" xml:space="preserve"><value>Match Windows</value></data>
+  <data name="Settings.Appearance.Theme.Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Settings.Appearance.Theme.Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Settings.Appearance.Accent" xml:space="preserve"><value>Accent color</value></data>
+  <data name="Settings.Appearance.Accent.System" xml:space="preserve"><value>System accent</value></data>
+  <data name="Settings.Appearance.ReduceMotion.Title" xml:space="preserve"><value>Reduce motion</value></data>
+  <data name="Settings.Appearance.ReduceMotion.Description" xml:space="preserve"><value>Disable decorative animations in the interface.</value></data>
+  <data name="Settings.Appearance.Animations.Title" xml:space="preserve"><value>App animations</value></data>
+  <data name="Settings.Appearance.Animations.Description" xml:space="preserve"><value>Controls overview (all monitors), floating indicator, and UI motion. The Windows global setting takes priority when following the system.</value></data>
+  <data name="Settings.Appearance.Animations.FollowSystem" xml:space="preserve"><value>Follow Windows</value></data>
+  <data name="Settings.Appearance.Animations.Enabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="Settings.Appearance.Animations.Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Settings.Appearance.Transition.Style.Title" xml:space="preserve"><value>Workspace switch feedback</value></data>
+  <data name="Settings.Appearance.Transition.Style.Description" xml:space="preserve"><value>Window switching is instant. Feedback is a light indicator with the workspace number.</value></data>
+  <data name="Settings.Appearance.Transition.Style.Slide" xml:space="preserve"><value>HUD (slide)</value></data>
+  <data name="Settings.Appearance.Transition.Style.Fade" xml:space="preserve"><value>HUD (fade)</value></data>
+  <data name="Settings.Appearance.Transition.Style.None" xml:space="preserve"><value>None</value></data>
+  <data name="Settings.Appearance.Transition.Speed.Title" xml:space="preserve"><value>HUD speed</value></data>
+  <data name="Settings.Appearance.Transition.Speed.Description" xml:space="preserve"><value>How quickly the workspace indicator appears and fades.</value></data>
+  <data name="Settings.Appearance.Transition.Speed.Fast" xml:space="preserve"><value>Fast</value></data>
+  <data name="Settings.Appearance.Transition.Speed.Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Settings.Appearance.Transition.Speed.Smooth" xml:space="preserve"><value>Smooth</value></data>
+  <data name="Overview.Title" xml:space="preserve"><value>Workspace overview</value></data>
+  <data name="Overview.EscHint" xml:space="preserve"><value>Esc to close · Ctrl+F search · drag to move</value></data>
+  <data name="Overview.Workspace" xml:space="preserve"><value>Workspace {0}</value></data>
+  <data name="Overview.WorkspaceActive" xml:space="preserve"><value>Workspace {0} (active)</value></data>
+  <data name="Overview.EmptyWorkspace" xml:space="preserve"><value>No windows</value></data>
+  <data name="Overview.DropCreateHint" xml:space="preserve"><value>Drop here to create a new workspace</value></data>
+  <data name="Overview.CloseWindow" xml:space="preserve"><value>Close window</value></data>
+  <data name="Overview.Minimized" xml:space="preserve"><value>Minimized</value></data>
+  <data name="Overview.Sticky" xml:space="preserve"><value>Sticky</value></data>
+  <data name="Overview.AppName" xml:space="preserve"><value>App</value></data>
+  <data name="Overview.SearchPlaceholder" xml:space="preserve"><value>Search windows…</value></data>
+  <data name="Toast.Elevation.Message" xml:space="preserve"><value>Admin window — restart elevated</value></data>
+  <data name="Toast.Elevation.Restart" xml:space="preserve"><value>Restart elevated</value></data>
+  <data name="Toast.Elevation.Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="Settings.Appearance.Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings.Appearance.Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Settings.Behavior.Title" xml:space="preserve"><value>Behavior</value></data>
+  <data name="Settings.Behavior.Description" xml:space="preserve"><value>How Spaces4Win manages windows and workspaces.</value></data>
+  <data name="Settings.Behavior.Sticky.Title" xml:space="preserve"><value>Sticky windows</value></data>
+  <data name="Settings.Behavior.Sticky.Description" xml:space="preserve"><value>Sticky windows stay visible across all workspaces on a monitor.</value></data>
+  <data name="Settings.Behavior.Switcher.Title" xml:space="preserve"><value>Hide inactive from Alt+Tab and taskbar</value></data>
+  <data name="Settings.Behavior.Switcher.Description" xml:space="preserve"><value>Uses SW_HIDE instead of cloaking. Inactive windows leave Alt+Tab and the taskbar; clicking a taskbar icon will not jump to a hidden workspace. Snap size may change when showing again.</value></data>
+  <data name="Settings.Behavior.SingleFullscreen.Title" xml:space="preserve"><value>One fullscreen window per workspace</value></data>
+  <data name="Settings.Behavior.SingleFullscreen.Description" xml:space="preserve"><value>When enabled, a workspace may have only one borderless fullscreen window. Moving another window into that workspace exits the existing fullscreen so both stay visible on the taskbar.</value></data>
+  <data name="Settings.Behavior.Overview.Title" xml:space="preserve"><value>Overview</value></data>
+  <data name="Settings.Behavior.Overview.Description" xml:space="preserve"><value>Overview shows live thumbnails of windows on every connected monitor.</value></data>
+  <data name="Settings.Behavior.Ignored.Title" xml:space="preserve"><value>Ignored applications</value></data>
+  <data name="Settings.Behavior.Ignored.Description" xml:space="preserve"><value>Custom ignore lists will be configurable in a future update. Helper and system windows without a real UI are already filtered out automatically.</value></data>
+  <data name="Settings.Behavior.Deletion.Title" xml:space="preserve"><value>When deleting a workspace</value></data>
+  <data name="Settings.Behavior.Deletion.Description" xml:space="preserve"><value>Windows move to the previous workspace number, or the next one if none exists. The last workspace cannot be deleted.</value></data>
+  <data name="Settings.Behavior.Shutdown.Title" xml:space="preserve"><value>When quitting Spaces4Win</value></data>
+  <data name="Settings.Behavior.Shutdown.Description" xml:space="preserve"><value>Windows on inactive workspaces return minimized to the taskbar without stealing focus. Active workspace windows stay as they are.</value></data>
+  <data name="Settings.Behavior.Advanced.Title" xml:space="preserve"><value>Advanced</value></data>
+  <data name="Settings.Behavior.Advanced.Description" xml:space="preserve"><value>Low-level window management options will appear here as they become available.</value></data>
+  <data name="Settings.Startup.Title" xml:space="preserve"><value>Startup &amp; permissions</value></data>
+  <data name="Settings.Startup.Description" xml:space="preserve"><value>Launch options and administrator access.</value></data>
+  <data name="Settings.Startup.StartWithWindows.Title" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="Settings.Startup.StartWithWindows.Description" xml:space="preserve"><value>Starts Spaces4Win at sign-in via Task Scheduler. With “Always run as administrator”, the task is elevated so login needs no UAC prompt.</value></data>
+  <data name="Settings.Startup.RegistrationFailed" xml:space="preserve"><value>Could not update startup task: {0}</value></data>
+  <data name="Settings.Administration.StandardUser" xml:space="preserve"><value>Standard user</value></data>
+  <data name="Settings.Administration.Elevated" xml:space="preserve"><value>Administrator</value></data>
+  <data name="Settings.Administration.ActionNeeded" xml:space="preserve"><value>Action needed</value></data>
+  <data name="Settings.Administration.Status" xml:space="preserve"><value>Elevation status</value></data>
+  <data name="Settings.Administration.Ask" xml:space="preserve"><value>Ask when an admin window is blocked</value></data>
+  <data name="Settings.Administration.Ask.Desc" xml:space="preserve"><value>Recommended for most people.</value></data>
+  <data name="Settings.Administration.Always" xml:space="preserve"><value>Always run as administrator</value></data>
+  <data name="Settings.Administration.Always.Desc" xml:space="preserve"><value>Restarts Spaces4Win elevated (one UAC when you open it). With Start with Windows, also registers an elevated logon task so the next sign-in needs no UAC.</value></data>
+  <data name="Settings.Administration.Never" xml:space="preserve"><value>Never ask — skip admin windows</value></data>
+  <data name="Settings.Administration.Never.Desc" xml:space="preserve"><value>Elevated windows stay unmanaged.</value></data>
+  <data name="Settings.Administration.RestartButton" xml:space="preserve"><value>Restart as administrator</value></data>
+  <data name="Settings.Administration.WhyTitle" xml:space="preserve"><value>Why is this needed?</value></data>
+  <data name="Settings.Administration.WhyBody" xml:space="preserve"><value>Windows prevents a standard app from controlling windows that run as administrator. Restarting Spaces4Win elevated lets it manage those windows. You can also choose never to prompt and leave admin windows alone.</value></data>
+  <data name="Settings.Administration.AlreadyAdmin" xml:space="preserve"><value>Spaces4Win is already running as administrator.</value></data>
+  <data name="Settings.Administration.ElevationFailed" xml:space="preserve"><value>Elevation was cancelled or failed.</value></data>
+  <data name="Settings.About.Title" xml:space="preserve"><value>About</value></data>
+  <data name="Settings.About.Description" xml:space="preserve"><value>Version information and diagnostics.</value></data>
+  <data name="Settings.About.Version" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="Settings.About.License" xml:space="preserve"><value>License: MIT</value></data>
+  <data name="Settings.About.Repository" xml:space="preserve"><value>Open GitHub repository</value></data>
+  <data name="Settings.About.OpenConfig" xml:space="preserve"><value>Open config file</value></data>
+  <data name="Settings.About.OpenLogs" xml:space="preserve"><value>Open logs folder</value></data>
+  <data name="Settings.About.CopyDiagnostics" xml:space="preserve"><value>Copy diagnostics</value></data>
+  <data name="Settings.About.CheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Settings.About.DiagnosticsCopied" xml:space="preserve"><value>Diagnostics copied to the clipboard.</value></data>
+  <data name="Settings.About.RepoUrl" xml:space="preserve"><value>https://github.com/OWNER/Spaces4Win</value></data>
+  <data name="Status.MoveMode" xml:space="preserve"><value>Move mode: drag indicators. Esc cancels.</value></data>
+  <data name="Status.MoveFinished" xml:space="preserve"><value>Indicator positions saved.</value></data>
+  <data name="Status.PositionsRestored" xml:space="preserve"><value>Indicator positions restored.</value></data>
+  <data name="Status.WorkspaceDeleted" xml:space="preserve"><value>Workspace deleted.</value></data>
+  <data name="Status.CannotDeleteOnly" xml:space="preserve"><value>Cannot delete the only workspace.</value></data>
+  <data name="Status.CannotDeleteOnlyMonitor" xml:space="preserve"><value>Cannot delete the only workspace on this monitor.</value></data>
+  <data name="Status.WorkspaceDeletedMoved" xml:space="preserve"><value>Workspace deleted — windows moved to the fallback workspace.</value></data>
+  <data name="Status.NoManageableWindow" xml:space="preserve"><value>No manageable window focused.</value></data>
+  <data name="Status.StickyOn" xml:space="preserve"><value>Window is now sticky (visible on all workspaces).</value></data>
+  <data name="Status.StickyOff" xml:space="preserve"><value>Window is no longer sticky.</value></data>
+  <data name="Status.NoMonitor" xml:space="preserve"><value>No monitor available.</value></data>
+  <data name="Status.WorkspacesCompacted" xml:space="preserve"><value>Workspaces compacted.</value></data>
+  <data name="Status.AlreadyDense" xml:space="preserve"><value>Already dense.</value></data>
+  <data name="Status.FullscreenOn" xml:space="preserve"><value>Entered fullscreen.</value></data>
+  <data name="Status.FullscreenOff" xml:space="preserve"><value>Exited fullscreen.</value></data>
+  <data name="Status.MovedToFreeWorkspace" xml:space="preserve"><value>Window moved to a free workspace.</value></data>
+  <data name="Status.MovedToFreeWorkspaceFollow" xml:space="preserve"><value>Switched to the new free workspace.</value></data>
+  <data name="Status.MaxWorkspaces" xml:space="preserve"><value>Maximum of 9 workspaces reached on this monitor.</value></data>
+  <data name="Status.CouldNotMoveWindow" xml:space="preserve"><value>Could not move the focused window.</value></data>
+  <data name="Switcher.UntitledWindow" xml:space="preserve"><value>Window</value></data>
+  <data name="Indicator.Pinned.Tooltip" xml:space="preserve"><value>Pinned</value></data>
+</root>

@@ -1,0 +1,61 @@
+<Page x:Class="Spaces4Win.Settings.Pages.HotkeysPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:controls="clr-namespace:Spaces4Win.Settings.Controls">
+    <Border Padding="28,20,28,24">
+        <StackPanel MaxWidth="{StaticResource SettingsContentMaxWidth}">
+            <controls:PageHeader DataContext="{Binding}" />
+            <ItemsControl ItemsSource="{Binding Categories}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,18">
+                            <TextBlock Text="{Binding Title}" Style="{StaticResource SettingsSectionTitle}" />
+                            <ItemsControl ItemsSource="{Binding Commands}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource SettingsRow}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Description}" Style="{StaticResource SettingsSecondaryText}" />
+                                                    <ItemsControl ItemsSource="{Binding Keycaps}" Margin="0,10,0,0">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Border Style="{StaticResource KeycapBorder}">
+                                                                        <TextBlock Text="{Binding}" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                                                    </Border>
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <ui:Button Content="{Binding DataContext.Loc[Common.Edit], RelativeSource={RelativeSource AncestorType=Page}}"
+                                                               Appearance="Secondary"
+                                                               IsEnabled="False"
+                                                               ToolTip="{Binding DataContext.Loc[Settings.Hotkeys.EditSoon], RelativeSource={RelativeSource AncestorType=Page}}"
+                                                               Margin="0,0,8,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</Page>

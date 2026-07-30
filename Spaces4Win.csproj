@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\Spaces4Win.ico</ApplicationIcon>
+    <RootNamespace>Spaces4Win</RootNamespace>
+    <AssemblyName>Spaces4Win</AssemblyName>
+    <Version>0.1.0</Version>
+    <Authors>Spaces4Win</Authors>
+    <Description>Per-monitor virtual workspace manager for Windows</Description>
+    <Product>Spaces4Win</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+    <PackageReference Include="WPF-UI.Abstractions" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Spaces4Win.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Spaces4Win.Tests\**" />
+    <EmbeddedResource Remove="Spaces4Win.Tests\**" />
+    <None Remove="Spaces4Win.Tests\**" />
+    <Page Remove="Spaces4Win.Tests\**" />
+  </ItemGroup>
+
+</Project>

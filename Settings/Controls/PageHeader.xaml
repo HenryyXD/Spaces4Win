@@ -1,0 +1,8 @@
+<UserControl x:Class="Spaces4Win.Settings.Controls.PageHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="0,0,0,4">
+        <TextBlock Text="{Binding Title}" Style="{StaticResource SettingsPageTitle}" />
+        <TextBlock Text="{Binding Description}" Style="{StaticResource SettingsPageDescription}" />
+    </StackPanel>
+</UserControl>

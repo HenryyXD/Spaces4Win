@@ -1,0 +1,26 @@
+﻿<Application x:Class="Spaces4Win.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:tb="clr-namespace:H.NotifyIcon;assembly=H.NotifyIcon.Wpf"
+             xmlns:settings="clr-namespace:Spaces4Win.Settings"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+                <ResourceDictionary Source="/Themes/SettingsTokens.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <settings:BoolToVisibilityConverter x:Key="BoolToVis" />
+
+            <tb:TaskbarIcon x:Key="NotifyIcon"
+                            x:Shared="False"
+                            ToolTipText="Spaces4Win"
+                            IconSource="/Assets/Spaces4Win.ico"
+                            MenuActivation="LeftOrRightClick"
+                            TrayLeftMouseUp="NotifyIcon_TrayLeftMouseUp" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

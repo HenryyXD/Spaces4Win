@@ -1,0 +1,33 @@
+<Window x:Class="Spaces4Win.WorkspaceIndicatorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Spaces4Win Indicator"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        ShowActivated="False"
+        Focusable="False"
+        SizeToContent="WidthAndHeight">
+    <Border x:Name="Capsule"
+            Padding="8,6"
+            CornerRadius="14"
+            BorderThickness="1"
+            Background="#381E2430"
+            BorderBrush="#66FFFFFF"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Cursor="Hand">
+        <StackPanel x:Name="CapsuleContent" Orientation="Horizontal" VerticalAlignment="Center">
+            <ItemsControl x:Name="DotsHost">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</Window>
