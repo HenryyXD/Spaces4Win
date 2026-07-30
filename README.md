@@ -9,8 +9,6 @@ Windows’ built-in Virtual Desktops switch **every monitor at once**. Spaces4Wi
 [![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](#requirements)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-> **Screenshot / GIF welcome** — drop a short clip of per-monitor switching into `Assets/` and link it here for the first public release.
-
 ---
 
 ## Features
