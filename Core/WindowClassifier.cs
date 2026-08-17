@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Spaces4Win.Native;
 
@@ -47,6 +48,51 @@ public static class WindowClassifier
         "MSCTFIME UI"
     };
 
+    /// <summary>
+    /// True when the process reports no main window (MainWindowHandle == 0).
+    /// Useful for tray residence while the HWND is still on the active space.
+    /// Never use after our SW_HIDE — that clears MainWindowHandle for Chrome too.
+    /// </summary>
+    public static bool IsTrayResidentProcess(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
+        {
+            return false;
+        }
+
+        NativeMethods.GetWindowThreadProcessId(hwnd, out var pid);
+        if (pid == 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            using var process = Process.GetProcessById((int)pid);
+            return process.MainWindowHandle == IntPtr.Zero;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// WS_EX_TOOLWINDOW without WS_EX_APPWINDOW — common after ShowInTaskbar=false / tray hide.
+    /// Safe after our SW_HIDE (unlike MainWindowHandle).
+    /// </summary>
+    public static bool LooksLikeTrayToolWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
+        {
+            return false;
+        }
+
+        var exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
+        return (exStyle & NativeMethods.WS_EX_TOOLWINDOW) != 0
+               && (exStyle & NativeMethods.WS_EX_APPWINDOW) == 0;
+    }
+
     public static bool IsManagedWindow(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
@@ -70,6 +116,10 @@ public static class WindowClassifier
         {
             return false;
         }
+
+        // After our SW_HIDE of a taskbar-minimized window, IsIconic often clears while
+        // WS_MINIMIZE remains — treat that like iconic so size/title heuristics don't reject Chrome.
+        var minimized = NativeMethods.IsIconic(hwnd) || (style & NativeMethods.WS_MINIMIZE) != 0;
 
         var exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
 
@@ -150,13 +200,13 @@ public static class WindowClassifier
         // Untitled ghosts that are not on-screen (or minimized).
         if (string.IsNullOrWhiteSpace(title) &&
             !NativeMethods.IsWindowVisible(hwnd) &&
-            !NativeMethods.IsIconic(hwnd))
+            !minimized)
         {
             return false;
         }
 
         // Strip / band / 0×0 helpers. Real apps are larger or minimized.
-        if (NativeMethods.GetWindowRect(hwnd, out var rect) && !NativeMethods.IsIconic(hwnd))
+        if (NativeMethods.GetWindowRect(hwnd, out var rect) && !minimized)
         {
             var w = rect.Right - rect.Left;
             var h = rect.Bottom - rect.Top;

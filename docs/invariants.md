@@ -20,6 +20,7 @@ Break these only with an explicit product decision + tests + doc/JOURNAL update.
 10. **Overlays ≠ MainWindow** — keep `Application.MainWindow` null/non-overlay so WPF-UI theme apply doesn’t target HUD/overview/indicator windows.
 11. **Classifier** — extend style/ownership heuristics + minimal shell classes; avoid per-app title blacklists without strong cause.
 12. **Hotkey CapsLock** — holding CapsLock for chords must not toggle lock; lone CapsLock still toggles.
+13. **Tray hide ≠ taskbar minimize** — `EVENT_OBJECT_HIDE` (tray) unmanages; taskbar-minimized (`IsIconic` / `WS_MINIMIZE`) stays on the workspace and is `SW_HIDE`/`SHOWMINNOACTIVE` across switches. Never `Forget` a Spaces4Win-hidden HWND without revealing (except true tray `TOOLWINDOW` after our hide).
 
 ## Anti-patterns
 

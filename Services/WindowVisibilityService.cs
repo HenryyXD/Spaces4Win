@@ -22,7 +22,19 @@ public sealed class WindowVisibilityService
     private readonly Dictionary<IntPtr, VisibilityOwnership> _ownership = new();
     private readonly HashSet<IntPtr> _restoreAsMinimized = new();
     private readonly HashSet<IntPtr> _cloakedByUs = new();
+    /// <summary>HWNDs we hid with SW_HIDE (iconic path, PreferSwHide, or cloak fallback).</summary>
+    private readonly HashSet<IntPtr> _swHiddenByUs = new();
     private readonly HashSet<IntPtr> _internalTransition = new();
+    /// <summary>
+    /// HWNDs for which the next EVENT_OBJECT_HIDE is from our ShowWindow(SW_HIDE).
+    /// Consumed by the hide handler so tray app hides are not ignored after a workspace hide.
+    /// </summary>
+    private readonly HashSet<IntPtr> _expectOurHideEvent = new();
+    /// <summary>
+    /// Owned / last-active-popup HWNDs we hid together with a managed owner so
+    /// modal progress/dialog clusters stay consistent across workspace switches.
+    /// </summary>
+    private readonly Dictionary<IntPtr, List<IntPtr>> _hiddenSatellites = new();
     private int _internalDepth;
 
     public event EventHandler<string>? Log;
@@ -78,7 +90,74 @@ public sealed class WindowVisibilityService
                 : VisibilityOwnership.Visible;
             _restoreAsMinimized.Remove(hwnd);
             _cloakedByUs.Remove(hwnd);
+            _swHiddenByUs.Remove(hwnd);
         }
+    }
+
+    /// <summary>User minimized to the taskbar — stays on the workspace.</summary>
+    public void TrackAsUserMinimized(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            _ownership[hwnd] = VisibilityOwnership.UserMinimized;
+            _restoreAsMinimized.Remove(hwnd);
+            _cloakedByUs.Remove(hwnd);
+            _swHiddenByUs.Remove(hwnd);
+        }
+    }
+
+    /// <summary>
+    /// True when Spaces4Win cloaked or SW_HID this HWND for an inactive workspace.
+    /// </summary>
+    public bool WasHiddenByUs(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            return _cloakedByUs.Contains(hwnd) || _swHiddenByUs.Contains(hwnd);
+        }
+    }
+
+    /// <summary>
+    /// If the next hide event is from our SW_HIDE, consume and return true (ignore it).
+    /// Otherwise return false — caller should treat it as tray/app hide and unmanage.
+    /// </summary>
+    public bool ConsumeExpectedHideEvent(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            return _expectOurHideEvent.Remove(hwnd);
+        }
+    }
+
+    public bool IsPendingMinimizedRestore(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            return _restoreAsMinimized.Contains(hwnd);
+        }
+    }
+
+    /// <summary>
+    /// Fully hidden by the app (minimize-to-tray), not merely iconic / cloaked by us.
+    /// </summary>
+    public static bool IsAppTrayHidden(IntPtr hwnd) =>
+        NativeMethods.IsWindow(hwnd) &&
+        !NativeMethods.IsWindowVisible(hwnd) &&
+        !NativeMethods.IsIconic(hwnd) &&
+        !WindowClassifier.IsCloaked(hwnd);
+
+    private void ExpectOurHide(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            _expectOurHideEvent.Add(hwnd);
+        }
+    }
+
+    private void SwHide(IntPtr hwnd)
+    {
+        ExpectOurHide(hwnd);
+        NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
     }
 
     /// <summary>
@@ -93,7 +172,6 @@ public sealed class WindowVisibilityService
             BeginInternalOperation();
             try
             {
-                // Restore without stealing focus from Spaces4Win / the shell.
                 NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWNOACTIVATE);
             }
             catch (Exception ex)
@@ -114,6 +192,7 @@ public sealed class WindowVisibilityService
                 : VisibilityOwnership.Visible;
             _restoreAsMinimized.Remove(hwnd);
             _cloakedByUs.Remove(hwnd);
+            _swHiddenByUs.Remove(hwnd);
         }
     }
 
@@ -124,7 +203,10 @@ public sealed class WindowVisibilityService
             _ownership.Remove(hwnd);
             _restoreAsMinimized.Remove(hwnd);
             _cloakedByUs.Remove(hwnd);
+            _swHiddenByUs.Remove(hwnd);
             _internalTransition.Remove(hwnd);
+            _expectOurHideEvent.Remove(hwnd);
+            _hiddenSatellites.Remove(hwnd);
         }
     }
 
@@ -144,77 +226,94 @@ public sealed class WindowVisibilityService
         }
     }
 
-    public void HideForWorkspace(IntPtr hwnd)
+    /// <summary>
+    /// Hide for inactive workspace. Returns false when the HWND should be unmanaged
+    /// (already tray-hidden / externally gone).
+    /// </summary>
+    public bool HideForWorkspace(IntPtr hwnd)
     {
         if (!NativeMethods.IsWindow(hwnd))
         {
             Forget(hwnd);
-            return;
+            return false;
         }
 
         MarkTransition(hwnd);
         BeginInternalOperation();
         try
         {
-            // Already invisible (not merely cloaked) and not minimized → leave alone.
+            // Already invisible (not merely cloaked) and not minimized → tray / external.
             if (!NativeMethods.IsWindowVisible(hwnd) &&
                 !NativeMethods.IsIconic(hwnd) &&
                 !WindowClassifier.IsCloaked(hwnd))
             {
-                lock (_sync)
+                if (!WasHiddenByUs(hwnd))
                 {
-                    if (!_ownership.TryGetValue(hwnd, out var existing) ||
-                        existing != VisibilityOwnership.HiddenBySpaces4Win)
-                    {
-                        _ownership[hwnd] = VisibilityOwnership.ExternallyHidden;
-                    }
+                    Forget(hwnd);
+                    return false;
                 }
 
-                return;
+                return true;
             }
 
-            var wasMinimized = NativeMethods.IsIconic(hwnd);
-            if (wasMinimized)
+            var satellites = EnumerateVisibilitySatellites(hwnd);
+
+            // Taskbar-minimized: SW_HIDE so they leave the taskbar on other spaces;
+            // restore with SHOWMINNOACTIVE when the workspace is shown again.
+            if (NativeMethods.IsIconic(hwnd))
             {
-                // Keep minimize semantics for user-minimized windows.
-                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
+                // Already tray-resident while still reporting iconic — do not own it.
+                if (WindowClassifier.IsTrayResidentProcess(hwnd))
+                {
+                    Forget(hwnd);
+                    return false;
+                }
+
+                SwHide(hwnd);
+                HideSatellites(hwnd, satellites, preferCloak: false);
                 lock (_sync)
                 {
                     _restoreAsMinimized.Add(hwnd);
                     _cloakedByUs.Remove(hwnd);
+                    _swHiddenByUs.Add(hwnd);
                     _ownership[hwnd] = VisibilityOwnership.HiddenBySpaces4Win;
                 }
 
-                return;
+                return true;
             }
 
-            // Cloak preserves maximize/snap size — SW_HIDE + SW_SHOWNA often shrinks windows.
-            // PreferSwHide forces SW_HIDE so inactive windows leave Alt-Tab / taskbar.
             if (!PreferSwHide && TrySetCloaked(hwnd, cloak: true))
             {
+                HideSatellites(hwnd, satellites, preferCloak: true);
                 lock (_sync)
                 {
                     _cloakedByUs.Add(hwnd);
+                    _swHiddenByUs.Remove(hwnd);
                     _restoreAsMinimized.Remove(hwnd);
                     _ownership[hwnd] = VisibilityOwnership.HiddenBySpaces4Win;
                 }
 
                 WindowHidden?.Invoke(this, hwnd);
-                return;
+                return true;
             }
 
-            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
+            SwHide(hwnd);
+            HideSatellites(hwnd, satellites, preferCloak: false);
             lock (_sync)
             {
                 _cloakedByUs.Remove(hwnd);
+                _swHiddenByUs.Add(hwnd);
+                _restoreAsMinimized.Remove(hwnd);
                 _ownership[hwnd] = VisibilityOwnership.HiddenBySpaces4Win;
             }
 
             WindowHidden?.Invoke(this, hwnd);
+            return true;
         }
         catch (Exception ex)
         {
             Log?.Invoke(this, $"Hide failed for {hwnd}: {ex.Message}");
+            return false;
         }
         finally
         {
@@ -222,12 +321,16 @@ public sealed class WindowVisibilityService
         }
     }
 
-    public void ShowForWorkspace(IntPtr hwnd)
+    /// <summary>
+    /// Show for active workspace. Returns false when the HWND must be dropped
+    /// (tray-hidden, style no longer managed).
+    /// </summary>
+    public bool ShowForWorkspace(IntPtr hwnd)
     {
         if (!NativeMethods.IsWindow(hwnd))
         {
             Forget(hwnd);
-            return;
+            return false;
         }
 
         MarkTransition(hwnd);
@@ -235,64 +338,99 @@ public sealed class WindowVisibilityService
         try
         {
             VisibilityOwnership ownership;
-            bool asMinimized;
+            bool restoreMinimized;
             bool cloakedByUs;
+            bool swHiddenByUs;
             lock (_sync)
             {
                 ownership = _ownership.TryGetValue(hwnd, out var o) ? o : VisibilityOwnership.Unknown;
-                asMinimized = _restoreAsMinimized.Contains(hwnd) || ownership == VisibilityOwnership.UserMinimized;
+                restoreMinimized = _restoreAsMinimized.Contains(hwnd);
                 cloakedByUs = _cloakedByUs.Contains(hwnd);
+                swHiddenByUs = _swHiddenByUs.Contains(hwnd);
+            }
+
+            var weOwnHide = swHiddenByUs || cloakedByUs || restoreMinimized
+                            || ownership == VisibilityOwnership.HiddenBySpaces4Win;
+
+            // Never gate "our hide" on IsManagedWindow first — SW_HIDE of an iconic
+            // window can clear IsIconic and fail size/title heuristics (Chrome), which
+            // used to Forget without reveal and strand the HWND.
+            if (!weOwnHide && !WindowClassifier.IsManagedWindow(hwnd))
+            {
+                Forget(hwnd);
+                return false;
             }
 
             if (ownership == VisibilityOwnership.ExternallyHidden)
             {
-                return;
+                Forget(hwnd);
+                return false;
             }
 
-            if (ownership is VisibilityOwnership.HiddenBySpaces4Win or VisibilityOwnership.Unknown or VisibilityOwnership.UserMinimized)
+            // Still taskbar-minimized on the active workspace — leave alone.
+            if (NativeMethods.IsIconic(hwnd) && !swHiddenByUs && !cloakedByUs)
             {
-                if (asMinimized)
+                lock (_sync)
                 {
+                    _ownership[hwnd] = VisibilityOwnership.UserMinimized;
+                    _restoreAsMinimized.Remove(hwnd);
+                }
+
+                return true;
+            }
+
+            if (ownership is VisibilityOwnership.HiddenBySpaces4Win
+                or VisibilityOwnership.Unknown
+                or VisibilityOwnership.UserMinimized)
+            {
+                if (restoreMinimized)
+                {
+                    // Never gate on MainWindowHandle here — our SW_HIDE clears it for
+                    // Chrome too. Tray apps should already have been Dropped (HIDE /
+                    // settle / TOOLWINDOW) before this path runs.
+                    if (WindowClassifier.LooksLikeTrayToolWindow(hwnd))
+                    {
+                        Forget(hwnd);
+                        return false;
+                    }
+
                     NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWMINNOACTIVE);
                 }
                 else if (cloakedByUs || WindowClassifier.IsCloaked(hwnd))
                 {
                     TrySetCloaked(hwnd, cloak: false);
                 }
-                else if (!NativeMethods.IsWindowVisible(hwnd))
+                else if (!NativeMethods.IsWindowVisible(hwnd) && !NativeMethods.IsIconic(hwnd))
                 {
-                    // Never force-show a window we did not hide. Invisible helpers
-                    // (CicMarshalWnd, MIT message windows, AWT toolkit, …) would
-                    // otherwise be pulled onto the desktop by SW_SHOWNA.
-                    if (ownership != VisibilityOwnership.HiddenBySpaces4Win &&
-                        ownership != VisibilityOwnership.UserMinimized)
+                    if (!swHiddenByUs)
                     {
-                        lock (_sync)
-                        {
-                            _ownership[hwnd] = VisibilityOwnership.ExternallyHidden;
-                        }
-
-                        return;
+                        Forget(hwnd);
+                        return false;
                     }
 
                     NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWNA);
                 }
+
+                ShowSatellites(hwnd);
             }
 
             lock (_sync)
             {
                 _restoreAsMinimized.Remove(hwnd);
                 _cloakedByUs.Remove(hwnd);
+                _swHiddenByUs.Remove(hwnd);
                 _ownership[hwnd] = NativeMethods.IsIconic(hwnd)
                     ? VisibilityOwnership.UserMinimized
                     : VisibilityOwnership.Visible;
             }
 
             WindowShown?.Invoke(this, hwnd);
+            return true;
         }
         catch (Exception ex)
         {
             Log?.Invoke(this, $"Show failed for {hwnd}: {ex.Message}");
+            return false;
         }
         finally
         {
@@ -302,8 +440,7 @@ public sealed class WindowVisibilityService
 
     /// <summary>
     /// On app exit: reveal Spaces4Win-hidden windows without activation.
-    /// Cloaked windows are uncloaked (size preserved). SW_HIDE fallbacks are shown
-    /// minimized only when they were user-minimized before hide; otherwise SHOWNA.
+    /// Cloaked → uncloak; previously-minimized SW_HIDE → SHOWMINNOACTIVE; else SHOWNA.
     /// </summary>
     public void RevealHiddenAsMinimizedNoActivate(IEnumerable<IntPtr> hwnds)
     {
@@ -321,13 +458,13 @@ public sealed class WindowVisibilityService
                     }
 
                     bool cloakedByUs;
-                    bool restoreAsMinimized;
+                    bool restoreMinimized;
                     VisibilityOwnership ownership;
                     lock (_sync)
                     {
                         ownership = _ownership.TryGetValue(hwnd, out var o) ? o : VisibilityOwnership.Unknown;
                         cloakedByUs = _cloakedByUs.Contains(hwnd);
-                        restoreAsMinimized = _restoreAsMinimized.Contains(hwnd);
+                        restoreMinimized = _restoreAsMinimized.Contains(hwnd);
                     }
 
                     if (ownership != VisibilityOwnership.HiddenBySpaces4Win)
@@ -335,7 +472,7 @@ public sealed class WindowVisibilityService
                         continue;
                     }
 
-                    RevealOne(hwnd, cloakedByUs, restoreAsMinimized);
+                    RevealOne(hwnd, cloakedByUs, restoreMinimized);
                 }
                 catch (Exception ex)
                 {
@@ -351,7 +488,6 @@ public sealed class WindowVisibilityService
 
     /// <summary>
     /// Crash/unclean recovery: uncloak or SHOWNA without requiring in-memory ownership.
-    /// Used on cold start when the journal lists HWNDs but ownership maps are empty.
     /// </summary>
     public void ForceRevealNoActivate(IEnumerable<IntPtr> hwnds)
     {
@@ -369,22 +505,22 @@ public sealed class WindowVisibilityService
                     }
 
                     bool cloakedByUs;
-                    bool restoreAsMinimized;
+                    bool restoreMinimized;
                     lock (_sync)
                     {
                         cloakedByUs = _cloakedByUs.Contains(hwnd);
-                        restoreAsMinimized = _restoreAsMinimized.Contains(hwnd);
+                        restoreMinimized = _restoreAsMinimized.Contains(hwnd);
                     }
 
                     var cloaked = cloakedByUs || WindowClassifier.IsCloaked(hwnd);
                     var invisible = !NativeMethods.IsWindowVisible(hwnd) && !NativeMethods.IsIconic(hwnd);
 
-                    if (!cloaked && !invisible && !restoreAsMinimized)
+                    if (!cloaked && !invisible && !restoreMinimized)
                     {
-                        // Already visible to the user — just normalize ownership.
                         lock (_sync)
                         {
                             _cloakedByUs.Remove(hwnd);
+                            _swHiddenByUs.Remove(hwnd);
                             _restoreAsMinimized.Remove(hwnd);
                             _ownership[hwnd] = NativeMethods.IsIconic(hwnd)
                                 ? VisibilityOwnership.UserMinimized
@@ -394,7 +530,7 @@ public sealed class WindowVisibilityService
                         continue;
                     }
 
-                    RevealOne(hwnd, cloakedByUs || cloaked, restoreAsMinimized || NativeMethods.IsIconic(hwnd));
+                    RevealOne(hwnd, cloakedByUs || cloaked, restoreMinimized || NativeMethods.IsIconic(hwnd));
                 }
                 catch (Exception ex)
                 {
@@ -408,7 +544,7 @@ public sealed class WindowVisibilityService
         }
     }
 
-    private void RevealOne(IntPtr hwnd, bool cloakedByUs, bool restoreAsMinimized)
+    private void RevealOne(IntPtr hwnd, bool cloakedByUs, bool restoreMinimized)
     {
         MarkTransition(hwnd);
         if (cloakedByUs || WindowClassifier.IsCloaked(hwnd))
@@ -417,15 +553,18 @@ public sealed class WindowVisibilityService
             lock (_sync)
             {
                 _cloakedByUs.Remove(hwnd);
+                _swHiddenByUs.Remove(hwnd);
                 _restoreAsMinimized.Remove(hwnd);
                 _ownership[hwnd] = VisibilityOwnership.Visible;
             }
         }
-        else if (restoreAsMinimized)
+        else if (restoreMinimized)
         {
             NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_SHOWMINNOACTIVE);
             lock (_sync)
             {
+                _cloakedByUs.Remove(hwnd);
+                _swHiddenByUs.Remove(hwnd);
                 _restoreAsMinimized.Remove(hwnd);
                 _ownership[hwnd] = VisibilityOwnership.UserMinimized;
             }
@@ -435,22 +574,25 @@ public sealed class WindowVisibilityService
             NativeMethods.ShowWindowAsync(hwnd, NativeMethods.SW_SHOWNA);
             lock (_sync)
             {
+                _cloakedByUs.Remove(hwnd);
+                _swHiddenByUs.Remove(hwnd);
                 _restoreAsMinimized.Remove(hwnd);
                 _ownership[hwnd] = VisibilityOwnership.Visible;
             }
         }
+
+        ShowSatellites(hwnd);
     }
 
     private enum PeekRevealKind
     {
         None = 0,
-        Uncloak,
-        ShowNa
+        Uncloak
     }
 
     /// <summary>
-    /// Temporarily reveal a Spaces4Win-hidden window (no activate) so PrintWindow / DWM
-    /// can capture content, then restore cloak or SW_HIDE. Ownership stays HiddenBySpaces4Win.
+    /// Temporarily uncloak a Spaces4Win-hidden window for PrintWindow capture.
+    /// Never SW_SHOWNA (would pull tray-hidden windows onto the desktop).
     /// </summary>
     public void WithPeekVisible(IntPtr hwnd, Action action)
     {
@@ -463,7 +605,6 @@ public sealed class WindowVisibilityService
             {
                 if (kind != PeekRevealKind.None)
                 {
-                    // Brief beat so DWM has a composited frame before capture.
                     Thread.Sleep(16);
                 }
 
@@ -480,10 +621,6 @@ public sealed class WindowVisibilityService
         }
     }
 
-    /// <summary>
-    /// Batch peek for overview open: one internal operation around all hwnds.
-    /// Calls <paramref name="action"/> once per hwnd while that hwnd is briefly revealed.
-    /// </summary>
     public void WithPeekVisible(IEnumerable<IntPtr> hwnds, Action<IntPtr> action)
     {
         ArgumentNullException.ThrowIfNull(hwnds);
@@ -530,12 +667,12 @@ public sealed class WindowVisibilityService
 
         VisibilityOwnership ownership;
         bool cloakedByUs;
-        bool restoreAsMinimized;
+        bool restoreMinimized;
         lock (_sync)
         {
             ownership = _ownership.TryGetValue(hwnd, out var o) ? o : VisibilityOwnership.Unknown;
             cloakedByUs = _cloakedByUs.Contains(hwnd);
-            restoreAsMinimized = _restoreAsMinimized.Contains(hwnd);
+            restoreMinimized = _restoreAsMinimized.Contains(hwnd);
         }
 
         if (ownership != VisibilityOwnership.HiddenBySpaces4Win)
@@ -543,8 +680,8 @@ public sealed class WindowVisibilityService
             return PeekRevealKind.None;
         }
 
-        // User-minimized hide path — do not SW_SHOW (would change minimize semantics).
-        if (restoreAsMinimized)
+        // Do not SW_SHOWNA peek for SW_HIDE'd minimized windows.
+        if (restoreMinimized)
         {
             return PeekRevealKind.None;
         }
@@ -553,18 +690,7 @@ public sealed class WindowVisibilityService
 
         if (cloakedByUs || WindowClassifier.IsCloaked(hwnd))
         {
-            if (TrySetCloaked(hwnd, cloak: false))
-            {
-                return PeekRevealKind.Uncloak;
-            }
-
-            return PeekRevealKind.None;
-        }
-
-        if (!NativeMethods.IsWindowVisible(hwnd) && !NativeMethods.IsIconic(hwnd))
-        {
-            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWNA);
-            return PeekRevealKind.ShowNa;
+            return TrySetCloaked(hwnd, cloak: false) ? PeekRevealKind.Uncloak : PeekRevealKind.None;
         }
 
         return PeekRevealKind.None;
@@ -579,7 +705,7 @@ public sealed class WindowVisibilityService
 
         // Caps+Ctrl move+follow (and similar): Hide → background peek → Switch/Show can
         // race EndPeek. If ownership is no longer HiddenBySpaces4Win, the window is on
-        // an active workspace — do not recloak/SW_HIDE it.
+        // an active workspace — do not recloak it.
         VisibilityOwnership ownership;
         lock (_sync)
         {
@@ -593,51 +719,24 @@ public sealed class WindowVisibilityService
 
         try
         {
-            switch (kind)
+            if (kind != PeekRevealKind.Uncloak)
             {
-                case PeekRevealKind.Uncloak:
-                    TrySetCloaked(hwnd, cloak: true);
-                    lock (_sync)
-                    {
-                        // Re-check: ShowForWorkspace may have won the race during TrySetCloaked.
-                        if (_ownership.TryGetValue(hwnd, out var again) &&
-                            again != VisibilityOwnership.HiddenBySpaces4Win)
-                        {
-                            TrySetCloaked(hwnd, cloak: false);
-                            return;
-                        }
+                return;
+            }
 
-                        _cloakedByUs.Add(hwnd);
-                        _ownership[hwnd] = VisibilityOwnership.HiddenBySpaces4Win;
-                    }
+            TrySetCloaked(hwnd, cloak: true);
+            lock (_sync)
+            {
+                // Re-check: ShowForWorkspace may have won the race during TrySetCloaked.
+                if (_ownership.TryGetValue(hwnd, out var again) &&
+                    again != VisibilityOwnership.HiddenBySpaces4Win)
+                {
+                    TrySetCloaked(hwnd, cloak: false);
+                    return;
+                }
 
-                    break;
-
-                case PeekRevealKind.ShowNa:
-                    lock (_sync)
-                    {
-                        if (_ownership.TryGetValue(hwnd, out var again) &&
-                            again != VisibilityOwnership.HiddenBySpaces4Win)
-                        {
-                            return;
-                        }
-                    }
-
-                    NativeMethods.ShowWindow(hwnd, NativeMethods.SW_HIDE);
-                    lock (_sync)
-                    {
-                        if (_ownership.TryGetValue(hwnd, out var again) &&
-                            again != VisibilityOwnership.HiddenBySpaces4Win)
-                        {
-                            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWNA);
-                            return;
-                        }
-
-                        _cloakedByUs.Remove(hwnd);
-                        _ownership[hwnd] = VisibilityOwnership.HiddenBySpaces4Win;
-                    }
-
-                    break;
+                _cloakedByUs.Add(hwnd);
+                _ownership[hwnd] = VisibilityOwnership.HiddenBySpaces4Win;
             }
         }
         catch (Exception ex)
@@ -660,6 +759,142 @@ public sealed class WindowVisibilityService
         catch
         {
             return false;
+        }
+    }
+
+    private static List<IntPtr> EnumerateVisibilitySatellites(IntPtr owner)
+    {
+        var list = new List<IntPtr>();
+        var seen = new HashSet<IntPtr> { owner };
+
+        NativeMethods.EnumWindows((h, _) =>
+        {
+            if (h == IntPtr.Zero || !seen.Add(h) || !NativeMethods.IsWindow(h))
+            {
+                return true;
+            }
+
+            if (NativeMethods.GetWindow(h, NativeMethods.GW_OWNER) != owner)
+            {
+                return true;
+            }
+
+            if (NativeMethods.IsWindowVisible(h) ||
+                NativeMethods.IsIconic(h) ||
+                WindowClassifier.IsCloaked(h))
+            {
+                list.Add(h);
+            }
+
+            return true;
+        }, IntPtr.Zero);
+
+        var popup = NativeMethods.GetLastActivePopup(owner);
+        if (popup != IntPtr.Zero &&
+            seen.Add(popup) &&
+            NativeMethods.IsWindow(popup) &&
+            (NativeMethods.IsWindowVisible(popup) ||
+             NativeMethods.IsIconic(popup) ||
+             WindowClassifier.IsCloaked(popup)))
+        {
+            list.Add(popup);
+        }
+
+        return list;
+    }
+
+    private void HideSatellites(IntPtr owner, List<IntPtr> satellites, bool preferCloak)
+    {
+        if (satellites.Count == 0)
+        {
+            lock (_sync)
+            {
+                _hiddenSatellites.Remove(owner);
+            }
+
+            return;
+        }
+
+        var hidden = new List<IntPtr>(satellites.Count);
+        foreach (var sat in satellites)
+        {
+            MarkTransition(sat);
+            try
+            {
+                if (!NativeMethods.IsWindow(sat))
+                {
+                    continue;
+                }
+
+                if (!NativeMethods.IsWindowVisible(sat) &&
+                    !NativeMethods.IsIconic(sat) &&
+                    !WindowClassifier.IsCloaked(sat))
+                {
+                    continue;
+                }
+
+                if (preferCloak && !PreferSwHide && TrySetCloaked(sat, cloak: true))
+                {
+                    hidden.Add(sat);
+                    continue;
+                }
+
+                SwHide(sat);
+                hidden.Add(sat);
+            }
+            catch (Exception ex)
+            {
+                Log?.Invoke(this, $"Satellite hide failed for {sat}: {ex.Message}");
+            }
+        }
+
+        lock (_sync)
+        {
+            if (hidden.Count > 0)
+            {
+                _hiddenSatellites[owner] = hidden;
+            }
+            else
+            {
+                _hiddenSatellites.Remove(owner);
+            }
+        }
+    }
+
+    private void ShowSatellites(IntPtr owner)
+    {
+        List<IntPtr>? satellites;
+        lock (_sync)
+        {
+            if (!_hiddenSatellites.Remove(owner, out satellites) || satellites is null)
+            {
+                return;
+            }
+        }
+
+        foreach (var sat in satellites)
+        {
+            MarkTransition(sat);
+            try
+            {
+                if (!NativeMethods.IsWindow(sat))
+                {
+                    continue;
+                }
+
+                if (WindowClassifier.IsCloaked(sat))
+                {
+                    TrySetCloaked(sat, cloak: false);
+                }
+                else if (!NativeMethods.IsWindowVisible(sat) && !NativeMethods.IsIconic(sat))
+                {
+                    NativeMethods.ShowWindow(sat, NativeMethods.SW_SHOWNA);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log?.Invoke(this, $"Satellite show failed for {sat}: {ex.Message}");
+            }
         }
     }
 

@@ -15,6 +15,12 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 
 ---
 
+### 2026-08-16 — Taskbar minimize vs minimize-to-tray
+- Area: visibility | events
+- Fact: Iconic (Chrome) stays on the workspace (`SW_HIDE`/`SHOWMINNOACTIVE`). App `EVENT_OBJECT_HIDE` / active-space settle (`MainWindowHandle == 0`, `IsAppTrayHidden`) unmanages tray apps. Never gate show on `MainWindowHandle` after our hide (strands Chrome). After iconic `SW_HIDE`, treat `WS_MINIMIZE` like iconic; do not `Forget` without reveal; `_expectOurHideEvent` filters our hide. Owned satellites keep modal progress with the owner. Peek uncloak only (no `SW_SHOWNA`).
+- Source: `WindowVisibilityService`, `WorkspaceManager` hide/minimize handlers, `WindowClassifier`, `TryActivateWindow`
+- Promoted: yes → docs/visibility.md, docs/invariants.md
+
 ### 2026-07-30 — Caps+Ctrl move+follow window stayed cloaked
 - Area: visibility | hotkeys
 - Fact: Move hid the window → `WindowCaptureCache` peek on a background thread → follow `ShowForWorkspace` → `EndPeek` recloaked. Fix: `EndPeek` skips restore unless ownership is still `HiddenBySpaces4Win`; move+follow uses `applyVisibility: false`.

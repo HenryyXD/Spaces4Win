@@ -345,7 +345,7 @@ public sealed class WorkspaceTransitionCoordinator : IWorkspaceNavigator, IDispo
 
             if (!NativeMethods.IsWindowVisible(win.Hwnd) || NativeMethods.IsIconic(win.Hwnd))
             {
-                if (win.IsMinimized)
+                if (win.IsMinimized || NativeMethods.IsIconic(win.Hwnd))
                 {
                     NativeMethods.ShowWindow(win.Hwnd, NativeMethods.SW_SHOWMINNOACTIVE);
                 }

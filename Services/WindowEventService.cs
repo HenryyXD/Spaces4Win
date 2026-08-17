@@ -14,6 +14,7 @@ public sealed class WindowEventService : IDisposable
     private IntPtr _hookCreateDestroy;
     private IntPtr _hookLocation;
     private IntPtr _hookMoveSize;
+    private IntPtr _hookMinimize;
     private bool _disposed;
 
     /// <summary>Raised on the UI dispatcher after a tracked window moves/resizes.</summary>
@@ -33,9 +34,10 @@ public sealed class WindowEventService : IDisposable
     {
         const uint flags = NativeMethods.WINEVENT_OUTOFCONTEXT | NativeMethods.WINEVENT_SKIPOWNPROCESS;
 
+        // CREATE..HIDE so tray / app SW_HIDE is observed.
         _hookCreateDestroy = NativeMethods.SetWinEventHook(
             NativeMethods.EVENT_OBJECT_CREATE,
-            NativeMethods.EVENT_OBJECT_SHOW,
+            NativeMethods.EVENT_OBJECT_HIDE,
             IntPtr.Zero,
             _callback,
             0,
@@ -55,6 +57,16 @@ public sealed class WindowEventService : IDisposable
         _hookMoveSize = NativeMethods.SetWinEventHook(
             NativeMethods.EVENT_SYSTEM_MOVESIZESTART,
             NativeMethods.EVENT_SYSTEM_MOVESIZEEND,
+            IntPtr.Zero,
+            _callback,
+            0,
+            0,
+            flags);
+
+        // Minimize start/end: taskbar minimize stays on workspace; restore updates ownership.
+        _hookMinimize = NativeMethods.SetWinEventHook(
+            NativeMethods.EVENT_SYSTEM_MINIMIZESTART,
+            NativeMethods.EVENT_SYSTEM_MINIMIZEEND,
             IntPtr.Zero,
             _callback,
             0,
@@ -105,6 +117,18 @@ public sealed class WindowEventService : IDisposable
                 case NativeMethods.EVENT_OBJECT_SHOW:
                     _workspaceManager.HandleWindowCreated(hwnd);
                     break;
+                case NativeMethods.EVENT_SYSTEM_MINIMIZEEND:
+                    // Restore from taskbar minimize — refresh ownership only.
+                    // Never Assign here: tray apps' ShowInTaskbar flicker can fire
+                    // MINIMIZEEND and would wrongly re-adopt a just-dropped HWND.
+                    _workspaceManager.HandleWindowRestored(hwnd);
+                    break;
+                case NativeMethods.EVENT_SYSTEM_MINIMIZESTART:
+                    _workspaceManager.HandleWindowMinimized(hwnd);
+                    break;
+                case NativeMethods.EVENT_OBJECT_HIDE:
+                    _workspaceManager.HandleWindowHidden(hwnd);
+                    break;
                 case NativeMethods.EVENT_OBJECT_DESTROY:
                     _lastLocationTick.Remove(hwnd);
                     _workspaceManager.NotifyMoveSizeEnded(hwnd);
@@ -152,6 +176,12 @@ public sealed class WindowEventService : IDisposable
         {
             NativeMethods.UnhookWinEvent(_hookMoveSize);
             _hookMoveSize = IntPtr.Zero;
+        }
+
+        if (_hookMinimize != IntPtr.Zero)
+        {
+            NativeMethods.UnhookWinEvent(_hookMinimize);
+            _hookMinimize = IntPtr.Zero;
         }
 
         GC.KeepAlive(_callback);

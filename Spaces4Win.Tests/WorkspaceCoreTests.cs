@@ -365,6 +365,119 @@ public class MonitorIndependenceTests
 public class ShutdownVisibilityTests
 {
     [Fact]
+    public void ConsumeExpectedHideEvent_OnlyOnce()
+    {
+        var vis = new WindowVisibilityService();
+        var hwnd = new IntPtr(99);
+
+        // SwHide is private — mark expect the same way HideForWorkspace does via reflection on empty set then public Consume.
+        var field = typeof(WindowVisibilityService)
+            .GetField("_expectOurHideEvent", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        var set = (HashSet<IntPtr>)field.GetValue(vis)!;
+        set.Add(hwnd);
+
+        Assert.True(vis.ConsumeExpectedHideEvent(hwnd));
+        Assert.False(vis.ConsumeExpectedHideEvent(hwnd));
+    }
+
+    [Fact]
+    public void IsAppTrayHidden_RequiresInvisibleNonIconic()
+    {
+        // Fake HWND will fail IsWindow — must be false.
+        Assert.False(WindowVisibilityService.IsAppTrayHidden(new IntPtr(1)));
+    }
+
+    [Fact]
+    public void LooksLikeTrayToolWindow_FalseForFakeHwnd()
+    {
+        Assert.False(WindowClassifier.LooksLikeTrayToolWindow(new IntPtr(1)));
+    }
+
+    [Fact]
+    public void ShowForWorkspace_DoesNotForceShow_WithoutOurHide()
+    {
+        var vis = new WindowVisibilityService();
+        var hwnd = new IntPtr(42);
+
+        typeof(WindowVisibilityService)
+            .GetField("_ownership", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vis, new Dictionary<IntPtr, VisibilityOwnership>
+            {
+                [hwnd] = VisibilityOwnership.HiddenBySpaces4Win
+            });
+
+        // No real HWND — ShowForWorkspace should Forget and return false (not managed / not our hide).
+        Assert.False(vis.ShowForWorkspace(hwnd));
+        Assert.Equal(VisibilityOwnership.Unknown, vis.GetOwnership(hwnd));
+    }
+
+    [Fact]
+    public void ShowForWorkspace_WeOwnHide_SkipsEarlyManagedGate_ThenForgetsDeadHwnd()
+    {
+        var vis = new WindowVisibilityService();
+        var hwnd = new IntPtr(4242);
+
+        typeof(WindowVisibilityService)
+            .GetField("_ownership", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vis, new Dictionary<IntPtr, VisibilityOwnership>
+            {
+                [hwnd] = VisibilityOwnership.HiddenBySpaces4Win
+            });
+        typeof(WindowVisibilityService)
+            .GetField("_swHiddenByUs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vis, new HashSet<IntPtr> { hwnd });
+        typeof(WindowVisibilityService)
+            .GetField("_restoreAsMinimized", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vis, new HashSet<IntPtr> { hwnd });
+
+        // Dead HWND: IsWindow fails inside try after weOwnHide bypass — Forget, false.
+        Assert.False(vis.ShowForWorkspace(hwnd));
+        Assert.Equal(VisibilityOwnership.Unknown, vis.GetOwnership(hwnd));
+        Assert.False(vis.WasHiddenByUs(hwnd));
+        Assert.False(vis.IsPendingMinimizedRestore(hwnd));
+    }
+
+    [Fact]
+    public void WasHiddenByUs_TrueOnlyWhenCloakOrSwHideTracked()
+    {
+        var vis = new WindowVisibilityService();
+        var hwnd = new IntPtr(7);
+
+        typeof(WindowVisibilityService)
+            .GetField("_ownership", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vis, new Dictionary<IntPtr, VisibilityOwnership>
+            {
+                [hwnd] = VisibilityOwnership.HiddenBySpaces4Win
+            });
+
+        Assert.False(vis.WasHiddenByUs(hwnd));
+
+        typeof(WindowVisibilityService)
+            .GetField("_swHiddenByUs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(vis, new HashSet<IntPtr> { hwnd });
+
+        Assert.True(vis.WasHiddenByUs(hwnd));
+    }
+
+    [Fact]
+    public void Forget_ClearsHiddenSatelliteTracking()
+    {
+        var vis = new WindowVisibilityService();
+        var owner = new IntPtr(10);
+        var sat = new IntPtr(11);
+
+        var field = typeof(WindowVisibilityService)
+            .GetField("_hiddenSatellites", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        var map = new Dictionary<IntPtr, List<IntPtr>> { [owner] = new List<IntPtr> { sat } };
+        field.SetValue(vis, map);
+
+        vis.Forget(owner);
+
+        var after = (Dictionary<IntPtr, List<IntPtr>>)field.GetValue(vis)!;
+        Assert.False(after.ContainsKey(owner));
+    }
+
+    [Fact]
     public void RevealHiddenAsMinimized_OnlyAffectsHiddenBySpaces4Win()
     {
         var vis = new WindowVisibilityService();

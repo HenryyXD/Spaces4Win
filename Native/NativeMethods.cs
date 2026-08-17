@@ -17,6 +17,8 @@ internal static class NativeMethods
     public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
     public const uint EVENT_SYSTEM_MOVESIZESTART = 0x000A;
     public const uint EVENT_SYSTEM_MOVESIZEEND = 0x000B;
+    public const uint EVENT_SYSTEM_MINIMIZESTART = 0x0016;
+    public const uint EVENT_SYSTEM_MINIMIZEEND = 0x0017;
 
     public const uint EVENT_OBJECT_CREATE = 0x8000;
     public const uint EVENT_OBJECT_DESTROY = 0x8001;
@@ -41,6 +43,7 @@ internal static class NativeMethods
     public const int WS_THICKFRAME = 0x00040000;
     public const int WS_MINIMIZEBOX = 0x00020000;
     public const int WS_MAXIMIZEBOX = 0x00010000;
+    public const int WS_MINIMIZE = 0x20000000;
     public const int WS_MAXIMIZE = 0x01000000;
     public const int WS_EX_TOOLWINDOW = 0x00000080;
     public const int WS_EX_APPWINDOW = 0x00040000;
@@ -204,13 +207,13 @@ internal static class NativeMethods
             return false;
         }
 
+        // Restore taskbar-minimized windows only. Do NOT SW_SHOW invisible
+        // non-iconic HWNDs — that pulls "minimize to tray" apps back onto the
+        // desktop. Cloaked windows still report IsWindowVisible=true; SW_HIDE
+        // workspace windows are revealed by WindowVisibilityService first.
         if (IsIconic(hwnd))
         {
             ShowWindow(hwnd, SW_RESTORE);
-        }
-        else if (!IsWindowVisible(hwnd))
-        {
-            ShowWindow(hwnd, SW_SHOW);
         }
 
         var foreground = GetForegroundWindow();

@@ -310,11 +310,11 @@ public sealed class WorkspaceManager
 
             if (show)
             {
-                _visibility.ShowForWorkspace(hwnd);
+                ShowOrDrop(hwnd);
             }
             else
             {
-                _visibility.HideForWorkspace(hwnd);
+                HideOrDrop(hwnd);
             }
         }
     }
@@ -470,7 +470,7 @@ public sealed class WorkspaceManager
 
                 foreach (var hwnd in hide!)
                 {
-                    _visibility.HideForWorkspace((IntPtr)hwnd);
+                    HideOrDrop((IntPtr)hwnd);
                 }
 
                 foreach (var hwnd in show!)
@@ -483,7 +483,7 @@ public sealed class WorkspaceManager
 
                     if (NativeMethods.IsWindow(handle) && WindowClassifier.IsManagedWindow(handle))
                     {
-                        _visibility.ShowForWorkspace(handle);
+                        ShowOrDrop(handle);
                     }
                     else
                     {
@@ -634,7 +634,7 @@ public sealed class WorkspaceManager
             var handle = (IntPtr)hwnd;
             if (NativeMethods.IsWindow(handle) && WindowClassifier.IsManagedWindow(handle))
             {
-                _visibility.ShowForWorkspace(handle);
+                ShowOrDrop(handle);
             }
             else
             {
@@ -766,7 +766,7 @@ public sealed class WorkspaceManager
 
         if (nowSticky)
         {
-            _visibility.ShowForWorkspace(hwnd);
+            ShowOrDrop(hwnd);
         }
 
         RaiseStateChanged();
@@ -1085,7 +1085,7 @@ public sealed class WorkspaceManager
 
         foreach (var h in hide)
         {
-            _visibility.HideForWorkspace((IntPtr)h);
+            HideOrDrop((IntPtr)h);
         }
 
         foreach (var h in show)
@@ -1093,7 +1093,7 @@ public sealed class WorkspaceManager
             var handle = (IntPtr)h;
             if (NativeMethods.IsWindow(handle) && WindowClassifier.IsManagedWindow(handle))
             {
-                _visibility.ShowForWorkspace(handle);
+                ShowOrDrop(handle);
             }
         }
 
@@ -1347,11 +1347,11 @@ public sealed class WorkspaceManager
 
             if (show)
             {
-                _visibility.ShowForWorkspace(handle);
+                ShowOrDrop(handle);
             }
             else
             {
-                _visibility.HideForWorkspace(handle);
+                HideOrDrop(handle);
             }
         }
 
@@ -1456,11 +1456,11 @@ public sealed class WorkspaceManager
                 var shouldShow = workspaceNumber == monitor.ActiveWorkspace;
                 if (shouldShow)
                 {
-                    _visibility.ShowForWorkspace(hwnd);
+                    ShowOrDrop(hwnd);
                 }
                 else
                 {
-                    _visibility.HideForWorkspace(hwnd);
+                    HideOrDrop(hwnd);
                 }
             }
             else
@@ -1636,8 +1636,14 @@ public sealed class WorkspaceManager
             return;
         }
 
-        // Ignore CREATE of invisible helpers; wait until the window is actually shown
-        // (or minimized) so we never adopt message-only / toolkit HWNDs.
+        // Process already in notify-icon residence — do not pull onto a workspace.
+        if (WindowClassifier.IsTrayResidentProcess(hwnd))
+        {
+            return;
+        }
+
+        // Ignore CREATE of invisible helpers; wait until shown or minimized.
+        // Tray apps that SW_HIDE are adopted only on a later real SHOW.
         if (!NativeMethods.IsWindowVisible(hwnd) && !NativeMethods.IsIconic(hwnd))
         {
             return;
@@ -1649,6 +1655,8 @@ public sealed class WorkspaceManager
             {
                 if (monitor.FindWorkspaceOf(hwnd) is not null || monitor.IsSticky(hwnd))
                 {
+                    // Restore from minimize while already assigned — clear UserMinimized.
+                    _visibility.TrackAsVisible(hwnd);
                     return;
                 }
             }
@@ -1662,6 +1670,42 @@ public sealed class WorkspaceManager
         }
 
         AssignWindowToWorkspace(hwnd, monitorInfo.DeviceName, GetActiveWorkspace(monitorInfo.DeviceName), applyVisibility: true);
+
+        // ShowInTaskbar=false (and similar) does Hide→style→Show→Hide. The brief SHOW
+        // would re-adopt a tray app after we dropped it on HIDE; settle undoes that.
+        ScheduleUnmanageIfTray(hwnd, delayMs: 500, keepIconicOnWorkspace: false);
+    }
+
+    /// <summary>
+    /// User restored from taskbar minimize. Only updates ownership when already
+    /// assigned — does not pull tray apps back onto a workspace.
+    /// </summary>
+    public void HandleWindowRestored(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero ||
+            _visibility.IsInternalTransition(hwnd) ||
+            !WindowClassifier.IsManagedWindow(hwnd))
+        {
+            return;
+        }
+
+        if (!NativeMethods.IsWindowVisible(hwnd) || NativeMethods.IsIconic(hwnd))
+        {
+            return;
+        }
+
+        lock (_sync)
+        {
+            foreach (var monitor in _monitors.Values)
+            {
+                if (monitor.FindWorkspaceOf(hwnd) is not null || monitor.IsSticky(hwnd))
+                {
+                    _visibility.TrackAsVisible(hwnd);
+                    RaiseStateChanged();
+                    return;
+                }
+            }
+        }
     }
 
     public void HandleWindowDestroyed(IntPtr hwnd)
@@ -1675,6 +1719,196 @@ public sealed class WorkspaceManager
             }
 
             RaiseStateChanged();
+        }
+    }
+
+    /// <summary>
+    /// User minimized — may be taskbar minimize (Chrome) or the first step of
+    /// minimize-to-tray (DS4-style). Defer briefly: if the app then SW_HIDEs to the
+    /// tray, drop; if it stays iconic, keep on the workspace.
+    /// </summary>
+    public void HandleWindowMinimized(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero ||
+            _visibility.IsInternalTransition(hwnd) ||
+            !WindowClassifier.IsManagedWindow(hwnd))
+        {
+            return;
+        }
+
+        if (!IsOnAnyWorkspace(hwnd))
+        {
+            return;
+        }
+
+        // Optimistic mark for overview; settle confirms tray vs taskbar.
+        _visibility.TrackAsUserMinimized(hwnd);
+        RaiseStateChanged();
+
+        // Two passes: tray Hide is often immediate; ShowInTaskbar flicker can re-SHOW later.
+        ScheduleUnmanageIfTray(hwnd, delayMs: 400, keepIconicOnWorkspace: true);
+        ScheduleUnmanageIfTray(hwnd, delayMs: 900, keepIconicOnWorkspace: true);
+    }
+
+    /// <summary>
+    /// After minimize / adopt: if the HWND is fully app-hidden (tray) or no longer
+    /// managed, remove it from workspaces. Ignores windows we SW_HID for a space switch.
+    /// When <paramref name="keepIconicOnWorkspace"/> is true (post-minimize), a still-iconic
+    /// managed window stays as taskbar-minimized; adopt settles never keep iconic re-shows
+    /// from ShowInTaskbar flicker (those must drop if they end tray-hidden, else stay only
+    /// if fully visible — iconic after tray flash is treated as tray residue and dropped).
+    /// </summary>
+    private void ScheduleUnmanageIfTray(IntPtr hwnd, int delayMs, bool keepIconicOnWorkspace)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null)
+        {
+            return;
+        }
+
+        _ = dispatcher.BeginInvoke(async () =>
+        {
+            try
+            {
+                await Task.Delay(delayMs).ConfigureAwait(true);
+                UnmanageIfTrayOrUnmanaged(hwnd, keepIconicOnWorkspace);
+            }
+            catch
+            {
+                // ignore
+            }
+        }, System.Windows.Threading.DispatcherPriority.Background);
+    }
+
+    private void UnmanageIfTrayOrUnmanaged(IntPtr hwnd, bool keepIconicOnWorkspace)
+    {
+        if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
+        {
+            return;
+        }
+
+        if (_visibility.IsInternalTransition(hwnd) || !IsOnAnyWorkspace(hwnd))
+        {
+            return;
+        }
+
+        // Workspace SW_HIDE of a taskbar-minimized window — keep restoreAsMinimized
+        // until show or a real tray EVENT_OBJECT_HIDE. Do not drop on IsManagedWindow:
+        // SW_HIDE often clears IsIconic while leaving a tiny/off-screen rect, so Chrome
+        // fails classifier heuristics and used to get Forgotten while still SW_HID.
+        if (_visibility.WasHiddenByUs(hwnd) && _visibility.IsPendingMinimizedRestore(hwnd))
+        {
+            return;
+        }
+
+        if (WindowVisibilityService.IsAppTrayHidden(hwnd) && !_visibility.WasHiddenByUs(hwnd))
+        {
+            DropWindowFromWorkspaces(hwnd);
+            return;
+        }
+
+        // Tray residence while we did not SW_HIDE (still on active space after minimize).
+        if (WindowClassifier.IsTrayResidentProcess(hwnd))
+        {
+            DropWindowFromWorkspaces(hwnd);
+            return;
+        }
+
+        if (!WindowClassifier.IsManagedWindow(hwnd))
+        {
+            DropWindowFromWorkspaces(hwnd);
+            return;
+        }
+
+        if (NativeMethods.IsIconic(hwnd) && keepIconicOnWorkspace)
+        {
+            _visibility.TrackAsUserMinimized(hwnd);
+            RaiseStateChanged();
+        }
+    }
+
+    private bool IsOnAnyWorkspace(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            foreach (var monitor in _monitors.Values)
+            {
+                if (monitor.FindWorkspaceOf(hwnd) is not null || monitor.IsSticky(hwnd))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// App hid the window (minimize-to-tray / close-to-tray). Our own SW_HIDE is
+    /// filtered via <see cref="WindowVisibilityService.ConsumeExpectedHideEvent"/>.
+    /// Extra HIDE while we still own an iconic workspace-hide only unmanages when
+    /// styles look like tray (TOOLWINDOW); otherwise ignore (Chrome stays pending).
+    /// </summary>
+    public void HandleWindowHidden(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        if (_visibility.ConsumeExpectedHideEvent(hwnd))
+        {
+            return;
+        }
+
+        if (_visibility.IsInternalTransition(hwnd))
+        {
+            return;
+        }
+
+        if (_visibility.WasHiddenByUs(hwnd) && _visibility.IsPendingMinimizedRestore(hwnd))
+        {
+            if (WindowClassifier.LooksLikeTrayToolWindow(hwnd))
+            {
+                // Leave SW_HID / tray-hidden — do not ForceReveal.
+                DropWindowFromWorkspaces(hwnd);
+            }
+
+            return;
+        }
+
+        DropWindowFromWorkspaces(hwnd);
+    }
+
+    private void DropWindowFromWorkspaces(IntPtr hwnd)
+    {
+        _visibility.Forget(hwnd);
+        if (!RemoveWindow(hwnd))
+        {
+            return;
+        }
+
+        foreach (var monitorId in Monitors.Select(m => m.MonitorId).ToList())
+        {
+            PruneEmptyInactiveWorkspaces(monitorId);
+        }
+
+        RaiseStateChanged();
+    }
+
+    private void ShowOrDrop(IntPtr hwnd)
+    {
+        if (!_visibility.ShowForWorkspace(hwnd))
+        {
+            DropWindowFromWorkspaces(hwnd);
+        }
+    }
+
+    private void HideOrDrop(IntPtr hwnd)
+    {
+        if (!_visibility.HideForWorkspace(hwnd))
+        {
+            DropWindowFromWorkspaces(hwnd);
         }
     }
 
@@ -1733,7 +1967,7 @@ public sealed class WorkspaceManager
         {
             if (rePinSticky)
             {
-                _visibility.ShowForWorkspace(hwnd);
+                ShowOrDrop(hwnd);
                 RaiseStateChanged();
             }
 
@@ -1873,9 +2107,12 @@ public sealed class WorkspaceManager
         HashSet<nint> shown,
         HashSet<nint> sticky)
     {
+        // Visible non-minimized only. Tray SW_HIDE is !IsWindowVisible && !IsIconic
+        // and must not be activated (TryActivateWindow no longer force-SW_SHOWs them).
         var candidates = shown.Concat(sticky)
             .Select(h => (IntPtr)h)
             .Where(h => NativeMethods.IsWindow(h) &&
+                        NativeMethods.IsWindowVisible(h) &&
                         !NativeMethods.IsIconic(h) &&
                         WindowClassifier.IsManagedWindow(h))
             .ToHashSet();
