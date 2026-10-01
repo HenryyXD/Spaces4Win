@@ -15,6 +15,12 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 
 ---
 
+### 2026-08-16 — Session presets (named layouts)
+- Area: presets | hotkeys | settings
+- Fact: 10 slots in `presets.json` (UI 1–10). Caps+P browser + confirm load; Caps+Ctrl+Alt+digit save + toast; Caps+Alt+digit focus slot. Apply closes unmatched managed windows, places matches, launches missing paths. Cold-start layout still never launches.
+- Source: `Services/Presets/*`, `AppConfig` preset hotkeys, Settings Workspaces
+- Promoted: yes → docs/hotkeys.md, docs/settings-config.md, docs/invariants.md
+
 ### 2026-08-16 — Taskbar minimize vs minimize-to-tray
 - Area: visibility | events
 - Fact: Iconic (Chrome) stays on the workspace (`SW_HIDE`/`SHOWMINNOACTIVE`). App `EVENT_OBJECT_HIDE` / active-space settle (`MainWindowHandle == 0`, `IsAppTrayHidden`) unmanages tray apps. Never gate show on `MainWindowHandle` after our hide (strands Chrome). After iconic `SW_HIDE`, treat `WS_MINIMIZE` like iconic; do not `Forget` without reveal; `_expectOurHideEvent` filters our hide. Owned satellites keep modal progress with the owner. Peek uncloak only (no `SW_SHOWNA`).

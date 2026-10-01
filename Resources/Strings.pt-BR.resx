@@ -63,6 +63,26 @@
   <data name="Settings.Workspaces.Hint.Access" xml:space="preserve"><value>Caps Lock + 1–9 troca para aquele workspace no monitor sob o cursor.</value></data>
   <data name="Settings.Workspaces.Hint.Create" xml:space="preserve"><value>Se o número não existir, ele é criado sob demanda.</value></data>
   <data name="Settings.Workspaces.Hint.Sparse" xml:space="preserve"><value>Números intermediários não são criados automaticamente.</value></data>
+  <data name="Settings.Workspaces.Presets.Title" xml:space="preserve"><value>Presets de sessão</value></data>
+  <data name="Settings.Workspaces.Presets.Description" xml:space="preserve"><value>Salve e restaure layouts nomeados (apps + workspaces). Caps+P abre o browser; Caps+Ctrl+Alt+0–9 salva; Caps+Alt+0–9 carrega.</value></data>
+  <data name="Settings.Workspaces.Presets.Empty" xml:space="preserve"><value>Vazio</value></data>
+  <data name="Settings.Workspaces.Presets.Clear" xml:space="preserve"><value>Limpar</value></data>
+  <data name="Settings.Workspaces.Presets.Slot" xml:space="preserve"><value>#{0}</value></data>
+  <data name="Preset.Browser.Title" xml:space="preserve"><value>Presets de sessão</value></data>
+  <data name="Preset.Browser.Hint" xml:space="preserve"><value>Enter carrega · F2 renomeia · Esc cancela · 0–9 seleciona</value></data>
+  <data name="Preset.Browser.Empty" xml:space="preserve"><value>Vazio</value></data>
+  <data name="Preset.Browser.Confirm" xml:space="preserve"><value>Carregar “{0}”? Enter confirma · Esc cancela (fecha apps que não estão no setup)</value></data>
+  <data name="Preset.Toast.Saved" xml:space="preserve"><value>“{0}” salvo</value></data>
+  <data name="Preset.Toast.Loaded" xml:space="preserve"><value>“{0}” carregado</value></data>
+  <data name="Preset.Toast.LoadedLaunched" xml:space="preserve"><value>“{0}” carregado ({1} app(s) abertos)</value></data>
+  <data name="Preset.Toast.LoadedPartial" xml:space="preserve"><value>“{0}” carregado ({1} app(s) falharam ao abrir)</value></data>
+  <data name="Settings.Hotkeys.Category.Presets" xml:space="preserve"><value>Presets de sessão</value></data>
+  <data name="Settings.Hotkeys.PresetBrowser.Name" xml:space="preserve"><value>Browser de presets</value></data>
+  <data name="Settings.Hotkeys.PresetBrowser.Desc" xml:space="preserve"><value>Ver presets nomeados, renomear e confirmar o carregamento.</value></data>
+  <data name="Settings.Hotkeys.SavePreset.Name" xml:space="preserve"><value>Salvar preset {0}</value></data>
+  <data name="Settings.Hotkeys.SavePreset.Desc" xml:space="preserve"><value>Captura o layout multi-monitor atual no slot {0}.</value></data>
+  <data name="Settings.Hotkeys.LoadPreset.Name" xml:space="preserve"><value>Carregar preset {0}</value></data>
+  <data name="Settings.Hotkeys.LoadPreset.Desc" xml:space="preserve"><value>Abre o browser focado no slot {0}.</value></data>
   <data name="Settings.Workspaces.Delete" xml:space="preserve"><value>Excluir workspace ativo</value></data>
   <data name="Settings.Workspaces.Delete.Desc" xml:space="preserve"><value>As janelas vão para o workspace {0}.</value></data>
   <data name="Settings.Workspaces.Delete.Blocked" xml:space="preserve"><value>Não é possível excluir o único workspace deste monitor.</value></data>

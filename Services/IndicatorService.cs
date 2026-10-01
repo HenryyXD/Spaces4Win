@@ -258,6 +258,45 @@ public sealed class IndicatorService : IDisposable
         toast.ShowAnchoredTo(indicator, bounds);
     }
 
+    /// <summary>Brief status chip near the floating indicator (or centered if indicators are off).</summary>
+    public void ShowStatusToast(string? monitorId, string message)
+    {
+        if (_disposed || string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        var resolvedId = monitorId;
+        if (string.IsNullOrWhiteSpace(resolvedId) || !_windows.ContainsKey(resolvedId))
+        {
+            resolvedId = _monitorTracker.FindMonitorUnderCursor()?.DeviceName
+                         ?? _windows.Keys.FirstOrDefault()
+                         ?? _monitorTracker.Monitors.FirstOrDefault()?.DeviceName;
+        }
+
+        var monitor = !string.IsNullOrWhiteSpace(resolvedId)
+            ? _monitorTracker.FindByDeviceName(resolvedId)
+            : _monitorTracker.FindMonitorUnderCursor();
+        var bounds = monitor?.Bounds ?? System.Drawing.Rectangle.Empty;
+        if (bounds.IsEmpty)
+        {
+            return;
+        }
+
+        var toast = new StatusToastWindow(message);
+        if (_enabled &&
+            !string.IsNullOrWhiteSpace(resolvedId) &&
+            _windows.TryGetValue(resolvedId!, out var indicator) &&
+            indicator.IsVisible)
+        {
+            toast.ShowAnchoredTo(indicator, bounds);
+        }
+        else
+        {
+            toast.ShowCenteredOnMonitor(bounds);
+        }
+    }
+
     public void RefreshAll()
     {
         if (!_enabled)

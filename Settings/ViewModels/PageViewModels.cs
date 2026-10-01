@@ -100,12 +100,53 @@ public sealed partial class OverviewPageViewModel : PageViewModelBase
 
 public sealed record LanguageChoice(string Id, string Display);
 
+public sealed partial class PresetSlotVm : ObservableObject
+{
+    private readonly Action<PresetSlotVm> _onRename;
+    private readonly Action<PresetSlotVm> _onClear;
+
+    public PresetSlotVm(int slot, string name, bool hasContent, string updatedText, Action<PresetSlotVm> onRename, Action<PresetSlotVm> onClear)
+    {
+        Slot = slot;
+        DisplayNumber = Spaces4Win.Services.Presets.PresetStore.SlotToDisplayNumber(slot);
+        _name = name;
+        HasContent = hasContent;
+        UpdatedText = updatedText;
+        _onRename = onRename;
+        _onClear = onClear;
+    }
+
+    public int Slot { get; }
+    public int DisplayNumber { get; }
+    public bool HasContent { get; private set; }
+    public string UpdatedText { get; private set; }
+
+    [ObservableProperty]
+    private string _name;
+
+    partial void OnNameChanged(string value) => _onRename(this);
+
+    [RelayCommand]
+    private void Clear() => _onClear(this);
+
+    public void RefreshMeta(bool hasContent, string updatedText)
+    {
+        HasContent = hasContent;
+        UpdatedText = updatedText;
+        OnPropertyChanged(nameof(HasContent));
+        OnPropertyChanged(nameof(UpdatedText));
+    }
+}
+
 public sealed partial class WorkspacesPageViewModel : PageViewModelBase
 {
     public WorkspacesPageViewModel(SettingsSession session, ILocalizationService loc) : base(session, loc)
     {
         SetHeader("Settings.Workspaces.Title", "Settings.Workspaces.Description");
+        ReloadPresets();
     }
+
+    public ObservableCollection<PresetSlotVm> Presets { get; } = new();
 
     [RelayCommand]
     private void DeleteActive(string? deviceName)
@@ -116,10 +157,57 @@ public sealed partial class WorkspacesPageViewModel : PageViewModelBase
         Session.RefreshMonitors();
     }
 
+    private void ReloadPresets()
+    {
+        Presets.Clear();
+        var store = Session.Services.PresetStore;
+        foreach (var slot in store.LoadOrCreate().Slots.OrderBy(s => Spaces4Win.Services.Presets.PresetStore.SlotToDisplayNumber(s.Slot)))
+        {
+            Presets.Add(new PresetSlotVm(
+                slot.Slot,
+                slot.Name,
+                slot.HasContent,
+                slot.HasContent ? slot.UpdatedAt.ToLocalTime().ToString("g") : Loc.Get("Settings.Workspaces.Presets.Empty"),
+                OnRenamePreset,
+                OnClearPreset));
+        }
+    }
+
+    private bool _suppressPresetRename;
+
+    private void OnRenamePreset(PresetSlotVm vm)
+    {
+        if (_suppressPresetRename)
+        {
+            return;
+        }
+
+        var updated = Session.Services.PresetStore.Rename(vm.Slot, vm.Name);
+        if (!string.Equals(vm.Name, updated.Name, StringComparison.Ordinal))
+        {
+            _suppressPresetRename = true;
+            try
+            {
+                vm.Name = updated.Name;
+            }
+            finally
+            {
+                _suppressPresetRename = false;
+            }
+        }
+    }
+
+    private void OnClearPreset(PresetSlotVm vm)
+    {
+        Session.Services.PresetStore.Clear(vm.Slot);
+        ReloadPresets();
+    }
+
     protected override void OnCultureChanged()
     {
         base.OnCultureChanged();
         SetHeader("Settings.Workspaces.Title", "Settings.Workspaces.Description");
+        ReloadPresets();
     }
 }
 
@@ -290,6 +378,43 @@ public sealed partial class HotkeysPageViewModel : PageViewModelBase
                     Keycaps = ToKeycaps(cfg.ToggleStickyHotkey)
                 }
             }
+        });
+
+        var presets = new ObservableCollection<HotkeyCommandVm>
+        {
+            new()
+            {
+                Name = Loc.Get("Settings.Hotkeys.PresetBrowser.Name"),
+                Description = Loc.Get("Settings.Hotkeys.PresetBrowser.Desc"),
+                Keycaps = ToKeycaps(cfg.PresetBrowserHotkey)
+            }
+        };
+        foreach (var hk in cfg.SavePresetHotkeys.OrderBy(h => Spaces4Win.Services.Presets.PresetStore.SlotToDisplayNumber(h.Workspace)))
+        {
+            var display = Spaces4Win.Services.Presets.PresetStore.SlotToDisplayNumber(hk.Workspace);
+            presets.Add(new HotkeyCommandVm
+            {
+                Name = Loc.Format("Settings.Hotkeys.SavePreset.Name", display),
+                Description = Loc.Format("Settings.Hotkeys.SavePreset.Desc", display),
+                Keycaps = ToKeycaps(hk)
+            });
+        }
+
+        foreach (var hk in cfg.LoadPresetHotkeys.OrderBy(h => Spaces4Win.Services.Presets.PresetStore.SlotToDisplayNumber(h.Workspace)))
+        {
+            var display = Spaces4Win.Services.Presets.PresetStore.SlotToDisplayNumber(hk.Workspace);
+            presets.Add(new HotkeyCommandVm
+            {
+                Name = Loc.Format("Settings.Hotkeys.LoadPreset.Name", display),
+                Description = Loc.Format("Settings.Hotkeys.LoadPreset.Desc", display),
+                Keycaps = ToKeycaps(hk)
+            });
+        }
+
+        Categories.Add(new HotkeyCategoryVm
+        {
+            Title = Loc.Get("Settings.Hotkeys.Category.Presets"),
+            Commands = presets
         });
 
         Categories.Add(new HotkeyCategoryVm

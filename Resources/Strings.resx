@@ -67,6 +67,26 @@
   <data name="Settings.Workspaces.Delete.Desc" xml:space="preserve"><value>Windows move to workspace {0}.</value></data>
   <data name="Settings.Workspaces.Delete.Blocked" xml:space="preserve"><value>Cannot delete the only workspace on this monitor.</value></data>
   <data name="Settings.Workspaces.Delete.Confirm" xml:space="preserve"><value>Delete workspace {0}? Windows will move to workspace {1}.</value></data>
+  <data name="Settings.Workspaces.Presets.Title" xml:space="preserve"><value>Session presets</value></data>
+  <data name="Settings.Workspaces.Presets.Description" xml:space="preserve"><value>Save and restore named layouts (apps + workspaces). Caps+P opens the browser; Caps+Ctrl+Alt+0–9 saves; Caps+Alt+0–9 loads.</value></data>
+  <data name="Settings.Workspaces.Presets.Empty" xml:space="preserve"><value>Empty</value></data>
+  <data name="Settings.Workspaces.Presets.Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Settings.Workspaces.Presets.Slot" xml:space="preserve"><value>#{0}</value></data>
+  <data name="Preset.Browser.Title" xml:space="preserve"><value>Session presets</value></data>
+  <data name="Preset.Browser.Hint" xml:space="preserve"><value>Enter load · F2 rename · Esc cancel · 0–9 select</value></data>
+  <data name="Preset.Browser.Empty" xml:space="preserve"><value>Empty</value></data>
+  <data name="Preset.Browser.Confirm" xml:space="preserve"><value>Load “{0}”? Enter confirm · Esc cancel (closes apps not in this setup)</value></data>
+  <data name="Preset.Toast.Saved" xml:space="preserve"><value>“{0}” saved</value></data>
+  <data name="Preset.Toast.Loaded" xml:space="preserve"><value>“{0}” loaded</value></data>
+  <data name="Preset.Toast.LoadedLaunched" xml:space="preserve"><value>“{0}” loaded ({1} app(s) opened)</value></data>
+  <data name="Preset.Toast.LoadedPartial" xml:space="preserve"><value>“{0}” loaded ({1} app(s) failed to start)</value></data>
+  <data name="Settings.Hotkeys.Category.Presets" xml:space="preserve"><value>Session presets</value></data>
+  <data name="Settings.Hotkeys.PresetBrowser.Name" xml:space="preserve"><value>Preset browser</value></data>
+  <data name="Settings.Hotkeys.PresetBrowser.Desc" xml:space="preserve"><value>Browse named presets, rename, and confirm load.</value></data>
+  <data name="Settings.Hotkeys.SavePreset.Name" xml:space="preserve"><value>Save preset {0}</value></data>
+  <data name="Settings.Hotkeys.SavePreset.Desc" xml:space="preserve"><value>Capture the current multi-monitor layout into preset slot {0}.</value></data>
+  <data name="Settings.Hotkeys.LoadPreset.Name" xml:space="preserve"><value>Load preset {0}</value></data>
+  <data name="Settings.Hotkeys.LoadPreset.Desc" xml:space="preserve"><value>Open the preset browser focused on slot {0}.</value></data>
   <data name="Settings.Hotkeys.Title" xml:space="preserve"><value>Hotkeys</value></data>
   <data name="Settings.Hotkeys.Description" xml:space="preserve"><value>Keyboard shortcuts for Spaces4Win.</value></data>
   <data name="Settings.Hotkeys.Category.Navigation" xml:space="preserve"><value>Navigation</value></data>

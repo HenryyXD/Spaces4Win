@@ -15,7 +15,7 @@ Break these only with an explicit product decision + tests + doc/JOURNAL update.
 5. **Cloak by default** — prefer DWM cloak; `SW_HIDE` only when `HideInactiveFromSwitcher` is enabled (document the Alt-Tab/taskbar tradeoff).
 6. **No focus steal on bulk show** — workspace show uses non-activating show; explicit activate is a separate step.
 7. **Shutdown reveal** — inactive hidden windows return **minimized**; coordinator is idempotent.
-8. **Layout never launches apps** — restore only remaps already-open windows.
+8. **Layout never launches apps** — cold-start `window-layout.json` restore only remaps already-open windows. **Session presets** (`presets.json`) may launch missing apps after explicit user confirm in the preset browser.
 9. **Internal ops don’t re-enter** — visibility/event loops must honor `BeginInternalOperation` / internal transition flags.
 10. **Overlays ≠ MainWindow** — keep `Application.MainWindow` null/non-overlay so WPF-UI theme apply doesn’t target HUD/overview/indicator windows.
 11. **Classifier** — extend style/ownership heuristics + minimal shell classes; avoid per-app title blacklists without strong cause.

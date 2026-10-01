@@ -12,6 +12,7 @@ sources: [Config/AppConfig.cs, Config/ConfigService.cs, Settings/]
 | --- | --- |
 | `%APPDATA%\Spaces4Win\config.json` | `ConfigService` (camelCase JSON, enum strings) |
 | `%APPDATA%\Spaces4Win\window-layout.json` | `WindowLayoutStore` |
+| `%APPDATA%\Spaces4Win\presets.json` | `PresetStore` (named session presets slots 0–9) |
 
 `AppConfig.CreateDefault()` seeds first-run defaults (including CapsLock chord tables).
 
@@ -25,7 +26,9 @@ sources: [Config/AppConfig.cs, Config/ConfigService.cs, Settings/]
 - Per-monitor `Monitors` dictionary (`MonitorConfig`: workspace ids, indicator offsets, …)
 - Large set of `HotkeyBinding` properties (switch, move, follow, adjacent, insert, overview, sticky, compact, fullscreen, delete, …)
 
-`window-layout.json` entries include `isMinimized` and `isFullscreen` (Caps+F borderless intent restored on start).
+`window-layout.json` entries include `isMinimized`, `isFullscreen`, and `isSticky` (Caps+F / sticky intent).
+
+**Session presets** (`presets.json`): 10 named slots (UI 1–10, storage 0–9). Save = `CaptureLayout`; load confirms then closes extras / places matches / launches missing. Hotkeys: Caps+P browser, Caps+Ctrl+Alt+digit save, Caps+Alt+digit open focused. Rename in browser (F2) or Settings → Workspaces.
 
 When adding a property: default in `CreateDefault`, bind in the right Settings page VM, persist via `SettingsSession` save path, document in this file’s table if user-visible.
 

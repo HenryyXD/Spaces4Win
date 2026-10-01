@@ -38,6 +38,8 @@ Move / sticky / compact / fullscreen / delete / insert typically call `Workspace
 
 `CapsLock+Q` → window switcher for the active workspace (+ sticky): MRU-ordered cards; first Q selects previous window; hold Caps + Q cycles; release activates.
 
+`CapsLock+P` → session-preset browser (named layouts). `CapsLock+Ctrl+Alt+0..9` saves current layout to that slot (toast). `CapsLock+Alt+0..9` opens the browser focused on that slot; Enter confirms load (may close extras and launch apps). F2 renames.
+
 ## Monitor targeting — `HotkeyMonitorContext`
 
 Resolves which monitor a chord applies to:

@@ -21,7 +21,7 @@ bin/Debug/net8.0-windows/Spaces4Win.exe --quit
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
 ```
 
-Config / layout live under `%APPDATA%\Spaces4Win\` (`config.json`, `window-layout.json`).
+Config / layout live under `%APPDATA%\Spaces4Win\` (`config.json`, `window-layout.json`, `presets.json`).
 
 ## Doc index (progressive disclosure)
 

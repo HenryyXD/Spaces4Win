@@ -147,6 +147,15 @@ public sealed class AppConfig
     /// <summary>Move cursor to next monitor (default CapsLock+]).</summary>
     public HotkeyBinding FocusNextMonitorHotkey { get; set; } = CreateDefaultFocusNextMonitorHotkey();
 
+    /// <summary>Open session-preset browser (default CapsLock+P).</summary>
+    public HotkeyBinding PresetBrowserHotkey { get; set; } = CreateDefaultPresetBrowserHotkey();
+
+    /// <summary>Save current layout to preset slot 0–9 (default CapsLock+Ctrl+Alt+digit).</summary>
+    public List<HotkeyBinding> SavePresetHotkeys { get; set; } = CreateDefaultSavePresetHotkeys();
+
+    /// <summary>Open preset browser focused on slot 0–9 (default CapsLock+Alt+digit).</summary>
+    public List<HotkeyBinding> LoadPresetHotkeys { get; set; } = CreateDefaultLoadPresetHotkeys();
+
     public IReadOnlyList<int> GetWorkspaceIds(string monitorId)
     {
         if (Monitors.TryGetValue(monitorId, out var cfg))
@@ -366,6 +375,36 @@ public sealed class AppConfig
         Key = Key.OemCloseBrackets
     };
 
+    public static HotkeyBinding CreateDefaultPresetBrowserHotkey() => new()
+    {
+        Workspace = 0,
+        CapsLock = true,
+        Modifiers = ModifierKeys.None,
+        Key = Key.P
+    };
+
+    public static List<HotkeyBinding> CreateDefaultSavePresetHotkeys() =>
+        Enumerable.Range(0, 10)
+            .Select(slot => new HotkeyBinding
+            {
+                Workspace = slot,
+                CapsLock = true,
+                Modifiers = ModifierKeys.Control | ModifierKeys.Alt,
+                Key = SlotToKey(slot)
+            })
+            .ToList();
+
+    public static List<HotkeyBinding> CreateDefaultLoadPresetHotkeys() =>
+        Enumerable.Range(0, 10)
+            .Select(slot => new HotkeyBinding
+            {
+                Workspace = slot,
+                CapsLock = true,
+                Modifiers = ModifierKeys.Alt,
+                Key = SlotToKey(slot)
+            })
+            .ToList();
+
     /// <summary>
     /// True when config still has the old Alt / Alt+Shift scheme that conflicted with browsers.
     /// </summary>
@@ -387,6 +426,21 @@ public sealed class AppConfig
 
     private static Key IndexToKey(int index) => index switch
     {
+        1 => Key.D1,
+        2 => Key.D2,
+        3 => Key.D3,
+        4 => Key.D4,
+        5 => Key.D5,
+        6 => Key.D6,
+        7 => Key.D7,
+        8 => Key.D8,
+        9 => Key.D9,
+        _ => Key.D1
+    };
+
+    private static Key SlotToKey(int slot) => slot switch
+    {
+        0 => Key.D0,
         1 => Key.D1,
         2 => Key.D2,
         3 => Key.D3,

@@ -171,6 +171,19 @@ public sealed class ConfigService
         config.MoveAdjacentRightHotkey ??= AppConfig.CreateDefaultMoveAdjacentRightHotkey();
         config.MoveAdjacentFollowLeftHotkey ??= AppConfig.CreateDefaultMoveAdjacentFollowLeftHotkey();
         config.MoveAdjacentFollowRightHotkey ??= AppConfig.CreateDefaultMoveAdjacentFollowRightHotkey();
+        config.FocusPreviousMonitorHotkey ??= AppConfig.CreateDefaultFocusPreviousMonitorHotkey();
+        config.FocusNextMonitorHotkey ??= AppConfig.CreateDefaultFocusNextMonitorHotkey();
+        config.PresetBrowserHotkey ??= AppConfig.CreateDefaultPresetBrowserHotkey();
+
+        if (config.SavePresetHotkeys is null || config.SavePresetHotkeys.Count == 0)
+        {
+            config.SavePresetHotkeys = AppConfig.CreateDefaultSavePresetHotkeys();
+        }
+
+        if (config.LoadPresetHotkeys is null || config.LoadPresetHotkeys.Count == 0)
+        {
+            config.LoadPresetHotkeys = AppConfig.CreateDefaultLoadPresetHotkeys();
+        }
 
         if (config.IndicatorOpacity is < 0.3 or > 1.0)
         {

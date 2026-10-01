@@ -3,6 +3,7 @@ using Spaces4Win.Core;
 using Spaces4Win.Localization;
 using Spaces4Win.Services;
 using Spaces4Win.Services.Animation;
+using Spaces4Win.Services.Presets;
 using Spaces4Win.Services.Switcher;
 using Spaces4Win.Services.Transition;
 using Microsoft.Win32;
@@ -20,6 +21,7 @@ public sealed class AppServices : IDisposable
     public WindowCaptureCache CaptureCache { get; private set; } = null!;
     public SessionJournal Journal { get; } = new();
     public WindowLayoutStore LayoutStore { get; } = new();
+    public PresetStore PresetStore { get; } = new();
     public WorkspaceManager? WorkspaceManager { get; private set; }
     public HotkeyService? HotkeyService { get; private set; }
     public WindowEventService? WindowEventService { get; private set; }
@@ -30,6 +32,8 @@ public sealed class AppServices : IDisposable
     public ForeignWorkspaceActivationService? ForeignWorkspaceActivation { get; private set; }
     public ShutdownCoordinator? ShutdownCoordinator { get; private set; }
     public SwitcherController? SwitcherController { get; private set; }
+    public PresetBrowserController? PresetBrowser { get; private set; }
+    public PresetApplyService? PresetApply { get; private set; }
     public WindowMruTracker WindowMru { get; } = new();
 
     /// <summary>False when Start() exited early to relaunch elevated.</summary>
@@ -124,6 +128,12 @@ public sealed class AppServices : IDisposable
         HotkeyService.CapsReleased += (_, _) => SwitcherController.Commit();
         HotkeyService.TryHandleEscapeWhileCapsHeld = () =>
         {
+            if (PresetBrowser is { IsActive: true })
+            {
+                PresetBrowser.TryHandleKey(Native.NativeMethods.VK_ESCAPE, capsHeld: true);
+                return true;
+            }
+
             if (SwitcherController is { IsActive: true })
             {
                 SwitcherController.Cancel();
@@ -147,6 +157,12 @@ public sealed class AppServices : IDisposable
             OverviewService?.TryHandleGlobalKey(vk, mods, capsHeld) == true;
         HotkeyService.GetModalKind = () =>
         {
+            var presets = PresetBrowser?.ActiveModalKind ?? HotkeyModalKind.None;
+            if (presets != HotkeyModalKind.None)
+            {
+                return presets;
+            }
+
             var switcher = SwitcherController?.ActiveModalKind ?? HotkeyModalKind.None;
             if (switcher != HotkeyModalKind.None)
             {
@@ -172,6 +188,31 @@ public sealed class AppServices : IDisposable
         };
         HotkeyService.ResolveStatusText = key =>
             Localization?.Get(key) ?? key;
+
+        PresetApply = new PresetApplyService(WorkspaceManager);
+        PresetBrowser = new PresetBrowserController(
+            WorkspaceManager,
+            MonitorTracker,
+            PresetStore,
+            PresetApply,
+            (monitorId, message) =>
+            {
+                if (IndicatorService is not null)
+                {
+                    IndicatorService.ShowStatusToast(monitorId, message);
+                }
+                else
+                {
+                    StatusMessage?.Invoke(this, message);
+                }
+            },
+            () => Localization ?? throw new InvalidOperationException("Localization missing."));
+        HotkeyService.PresetBrowserAction = () => PresetBrowser.Open();
+        HotkeyService.SavePresetAction = slot => PresetBrowser.SaveSlot(slot);
+        HotkeyService.LoadPresetAction = slot => PresetBrowser.OpenFocused(slot);
+        HotkeyService.PresetBrowserInputFilter = (vk, capsHeld) =>
+            PresetBrowser?.TryHandleKey(vk, capsHeld) == true;
+
         HotkeyService.Apply(Config);
 
         // Restore open windows into last workspaces; never launch missing apps.
@@ -543,6 +584,7 @@ public sealed class AppServices : IDisposable
         ForeignWorkspaceActivation?.Dispose();
         HotkeyService?.Dispose();
         SwitcherController?.Dispose();
+        PresetBrowser?.Dispose();
         HotkeyMonitorContext?.Dispose();
         IndicatorService?.Dispose();
         OverviewService?.Dispose();

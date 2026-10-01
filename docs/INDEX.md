@@ -17,7 +17,7 @@ Each row is a **tier-1 cue**: match the task, then `Read` only that path.
 | `OverviewService` multi-monitor Exposé; `OverviewWindow`; cascade layout; search; drag ghost | [`overview.md`](overview.md) |
 | `IndicatorService` / `WorkspaceIndicatorWindow`; move mode; pinned ring modes | [`indicators.md`](indicators.md) |
 | `WorkspaceTransitionCoordinator` + HUD/curtain engines; rapid-switch cancel | [`transitions.md`](transitions.md) |
-| `%APPDATA%` config/layout; `AppConfig` knobs; Settings pages + `SettingsSession` | [`settings-config.md`](settings-config.md) |
+| `%APPDATA%` config/layout/presets; `AppConfig` knobs; Settings pages + `SettingsSession` | [`settings-config.md`](settings-config.md) |
 | `ElevationPreference` / UIPI; Task Scheduler `Spaces4Win\Autostart`; `ShutdownCoordinator` + journal recovery | [`elevation-startup.md`](elevation-startup.md) |
 | Non-negotiable behavioral invariants and anti-patterns | [`invariants.md`](invariants.md) |
 | Short definitions of domain terms used across docs and code | [`glossary.md`](glossary.md) |
@@ -29,7 +29,7 @@ Each row is a **tier-1 cue**: match the task, then `Read` only that path.
 | Folder | Role |
 | --- | --- |
 | `Core/` | Workspace model, monitors, window classification |
-| `Services/` | Hotkeys, visibility, events, indicators, overview, transition, elevation, layout |
+| `Services/` | Hotkeys, visibility, events, indicators, overview, transition, elevation, layout, presets |
 | `Config/` | `AppConfig`, JSON load/save |
 | `Overview/` | Snapshot/thumbnail/layout helpers for Exposé |
 | `Settings/` | WPF-UI settings shell and pages |

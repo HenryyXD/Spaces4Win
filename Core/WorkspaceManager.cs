@@ -178,9 +178,34 @@ public sealed class WorkspaceManager
                             // Capture before shutdown reveal — reflects real user minimize intent.
                             IsMinimized = NativeMethods.IsIconic(handle),
                             IsFullscreen = _fullscreen.ShouldPersistFullscreen(handle) ||
-                                           WindowFullscreenService.IsGeometricFullscreen(handle, monitor.Bounds)
+                                           WindowFullscreenService.IsGeometricFullscreen(handle, monitor.Bounds),
+                            IsSticky = false
                         });
                     }
+                }
+
+                foreach (var hwnd in monitor.StickyWindows)
+                {
+                    var handle = (IntPtr)hwnd;
+                    if (!NativeMethods.IsWindow(handle))
+                    {
+                        continue;
+                    }
+
+                    var id = ProcessPathHelper.CaptureIdentity(handle);
+                    entry.Windows.Add(new LayoutWindowEntry
+                    {
+                        Hwnd = id.Hwnd.ToInt64(),
+                        ProcessId = id.ProcessId,
+                        ProcessPath = id.ProcessPath,
+                        Title = id.Title,
+                        ClassName = id.ClassName,
+                        Workspace = monitor.ActiveWorkspace,
+                        IsMinimized = NativeMethods.IsIconic(handle),
+                        IsFullscreen = _fullscreen.ShouldPersistFullscreen(handle) ||
+                                       WindowFullscreenService.IsGeometricFullscreen(handle, monitor.Bounds),
+                        IsSticky = true
+                    });
                 }
 
                 doc.Monitors.Add(entry);
@@ -772,6 +797,55 @@ public sealed class WorkspaceManager
         RaiseStateChanged();
         return nowSticky;
     }
+
+    /// <summary>Pin or unpin a managed window as sticky on <paramref name="monitorId"/>.</summary>
+    public bool SetSticky(IntPtr hwnd, string monitorId, bool sticky)
+    {
+        if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd) || !WindowClassifier.IsManagedWindow(hwnd))
+        {
+            return false;
+        }
+
+        lock (_sync)
+        {
+            if (!_monitors.TryGetValue(monitorId, out var monitor))
+            {
+                return false;
+            }
+
+            if (sticky)
+            {
+                foreach (var other in _monitors.Values)
+                {
+                    other.RemoveWindow(hwnd);
+                    other.StickyWindows.Remove(hwnd);
+                }
+
+                monitor.StickyWindows.Add(hwnd);
+            }
+            else
+            {
+                if (!monitor.StickyWindows.Remove(hwnd))
+                {
+                    return false;
+                }
+
+                monitor.AssignWindow(hwnd, monitor.ActiveWorkspace);
+            }
+        }
+
+        if (sticky)
+        {
+            ShowOrDrop(hwnd);
+        }
+
+        RaiseStateChanged();
+        return true;
+    }
+
+    /// <summary>Ensure sparse workspace ids from a layout document exist on known monitors.</summary>
+    public void EnsureWorkspacesFromLayoutDocument(WindowLayoutDocument layout) =>
+        EnsureWorkspacesFromLayout(layout);
 
     /// <summary>
     /// Caps+F: toggle borderless fullscreen on the focused window in place

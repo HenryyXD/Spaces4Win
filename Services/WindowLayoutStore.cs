@@ -88,6 +88,8 @@ public sealed class LayoutWindowEntry
     /// True when Spaces4Win had the window in Caps+F borderless fullscreen at capture time.
     /// </summary>
     public bool IsFullscreen { get; set; }
+    /// <summary>True when the window was sticky (visible on all workspaces) on that monitor.</summary>
+    public bool IsSticky { get; set; }
 }
 
 /// <summary>Live window fingerprint used for matching against a saved layout.</summary>

@@ -51,6 +51,45 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+
+            <Border Style="{StaticResource SettingsCard}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding Loc[Settings.Workspaces.Presets.Title]}" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding Loc[Settings.Workspaces.Presets.Description]}" Style="{StaticResource SettingsSecondaryText}" Margin="0,0,0,12" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding Presets}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="48" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding DisplayNumber, StringFormat=#{0}}" />
+                                    <TextBox Grid.Column="1"
+                                             Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                                             Margin="0,0,12,0"
+                                             MaxLength="40" />
+                                    <TextBlock Grid.Column="2"
+                                               VerticalAlignment="Center"
+                                               Style="{StaticResource SettingsSecondaryText}"
+                                               Text="{Binding UpdatedText}"
+                                               Margin="0,0,12,0" />
+                                    <ui:Button Grid.Column="3"
+                                               Content="{Binding DataContext.Loc[Settings.Workspaces.Presets.Clear], RelativeSource={RelativeSource AncestorType=Page}}"
+                                               Appearance="Secondary"
+                                               Command="{Binding ClearCommand}"
+                                               IsEnabled="{Binding HasContent}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </Border>
 </Page>

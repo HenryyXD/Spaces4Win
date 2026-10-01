@@ -6,7 +6,8 @@ public enum HotkeyModalKind
     None = 0,
     WorkspaceSwitcher,
     WindowSwitcher,
-    Overview
+    Overview,
+    PresetBrowser
 }
 
 /// <summary>Role of a registered Caps chord for modal gating.</summary>
@@ -15,11 +16,12 @@ public enum HotkeyRole
     General = 0,
     WorkspaceSwitcher,
     WindowSwitcher,
-    Overview
+    Overview,
+    PresetBrowser
 }
 
 /// <summary>
-/// While Caps+Tab / Caps+Q / Caps+` overlays are open, only that overlay's own
+/// While Caps+Tab / Caps+Q / Caps+` / Caps+P overlays are open, only that overlay's own
 /// advance/toggle chord may fire; all other Spaces4Win hotkeys are swallowed.
 /// </summary>
 public static class HotkeyModalGate
@@ -36,6 +38,7 @@ public static class HotkeyModalGate
             HotkeyModalKind.WorkspaceSwitcher => role == HotkeyRole.WorkspaceSwitcher,
             HotkeyModalKind.WindowSwitcher => role == HotkeyRole.WindowSwitcher,
             HotkeyModalKind.Overview => role == HotkeyRole.Overview,
+            HotkeyModalKind.PresetBrowser => role == HotkeyRole.PresetBrowser,
             _ => false
         };
     }

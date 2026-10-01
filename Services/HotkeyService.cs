@@ -50,6 +50,12 @@ public sealed class HotkeyService : IDisposable
     /// </summary>
     public Func<uint, ModifierKeys, bool, bool>? OverviewInputFilter { get; set; }
 
+    /// <summary>
+    /// While preset browser is open: (vk, capsPhysicallyHeld) → swallow if handled.
+    /// Same reason as overview — overlay is NOACTIVATE and must not rely on WPF focus.
+    /// </summary>
+    public Func<uint, bool, bool>? PresetBrowserInputFilter { get; set; }
+
     /// <summary>Active Caps+Tab / Caps+Q / Caps+` session; blocks other chords while set.</summary>
     public Func<HotkeyModalKind>? GetModalKind { get; set; }
 
@@ -58,6 +64,15 @@ public sealed class HotkeyService : IDisposable
 
     /// <summary>Optional CapsLock+[ / ] focus previous/next monitor (direction -1 / +1).</summary>
     public Action<int>? FocusAdjacentMonitorAction { get; set; }
+
+    /// <summary>Open session-preset browser (Caps+P).</summary>
+    public Action? PresetBrowserAction { get; set; }
+
+    /// <summary>Save layout to preset slot 0–9.</summary>
+    public Action<int>? SavePresetAction { get; set; }
+
+    /// <summary>Open preset browser focused on slot 0–9.</summary>
+    public Action<int>? LoadPresetAction { get; set; }
 
     /// <summary>Optional animated switch (set before Apply). Falls back to WorkspaceManager.</summary>
     public Action<string, int>? SwitchOrCreateAction { get; set; }
@@ -355,6 +370,21 @@ public sealed class HotkeyService : IDisposable
         var focusNext = config.FocusNextMonitorHotkey ?? AppConfig.CreateDefaultFocusNextMonitorHotkey();
         _bindings.Add((Clone(focusNext), () => FocusAdjacentMonitorAction?.Invoke(+1), HotkeyRole.General));
 
+        var presetBrowser = config.PresetBrowserHotkey ?? AppConfig.CreateDefaultPresetBrowserHotkey();
+        _bindings.Add((Clone(presetBrowser), () => PresetBrowserAction?.Invoke(), HotkeyRole.PresetBrowser));
+
+        foreach (var binding in config.SavePresetHotkeys ?? AppConfig.CreateDefaultSavePresetHotkeys())
+        {
+            var slot = binding.Workspace;
+            _bindings.Add((Clone(binding), () => SavePresetAction?.Invoke(slot), HotkeyRole.General));
+        }
+
+        foreach (var binding in config.LoadPresetHotkeys ?? AppConfig.CreateDefaultLoadPresetHotkeys())
+        {
+            var slot = binding.Workspace;
+            _bindings.Add((Clone(binding), () => LoadPresetAction?.Invoke(slot), HotkeyRole.PresetBrowser));
+        }
+
         EnsureHook();
     }
 
@@ -549,10 +579,21 @@ public sealed class HotkeyService : IDisposable
             return (IntPtr)1;
         }
 
-        // Overview must win over Caps+←/→ workspace chords and over apps that kept focus.
-        if (isDown &&
-            (GetModalKind?.Invoke() ?? HotkeyModalKind.None) == HotkeyModalKind.Overview &&
+        // Overview / preset browser must win over Caps+←/→ workspace chords and over apps that kept focus.
+        var modal = GetModalKind?.Invoke() ?? HotkeyModalKind.None;
+        if (isDown && modal == HotkeyModalKind.Overview &&
             OverviewInputFilter?.Invoke(info.vkCode, ReadModifiers(), _capsHeld) == true)
+        {
+            if (_capsHeld)
+            {
+                _capsUsedAsChord = true;
+            }
+
+            return (IntPtr)1;
+        }
+
+        if (isDown && modal == HotkeyModalKind.PresetBrowser &&
+            PresetBrowserInputFilter?.Invoke(info.vkCode, _capsHeld) == true)
         {
             if (_capsHeld)
             {
