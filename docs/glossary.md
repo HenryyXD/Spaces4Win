@@ -17,7 +17,7 @@ when: Unfamiliar term in code/docs; writing user-facing explanations with an AI 
 | **Foreign activation** | Foregrounding a window that belongs to a non-active space (e.g. taskbar) |
 | **UIPI** | Integrity isolation — unelevated process can’t manipulate elevated HWNDs |
 | **Journal** | Session record used to recover if the process dies while windows are hidden |
-| **Overview / Exposé** | Full-monitor UI of all spaces/windows for picking or dragging |
+| **Overview** | Full-monitor UI of all spaces/windows for picking or dragging |
 | **HUD transition** | Animated overlay during space switch (cancellable on rapid input) |
 | **Ownership** | `VisibilityOwnership` — who caused a window to be invisible |
 | **Internal operation** | Bulk hide/show where WinEvents must be ignored to avoid feedback |

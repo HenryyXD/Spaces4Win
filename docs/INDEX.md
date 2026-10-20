@@ -14,7 +14,7 @@ Each row is a **tier-1 cue**: match the task, then `Read` only that path.
 | `MonitorWorkspace` sparse ids 1–9; sticky; switch/create/move/follow/insert/delete/compact APIs on `WorkspaceManager` | [`workspaces.md`](workspaces.md) |
 | `WindowVisibilityService` ownership enum; cloak vs SW_HIDE; `WindowClassifier` Alt-Tab heuristics; `WindowEventService` hooks | [`visibility.md`](visibility.md) |
 | `HotkeyService` CapsLock LL hook; Caps+Tab/Q switchers; `HotkeyMonitorContext`; `ForeignActivationPolicy` | [`hotkeys.md`](hotkeys.md) |
-| `OverviewService` multi-monitor Exposé; `OverviewWindow`; cascade layout; search; drag ghost | [`overview.md`](overview.md) |
+| `OverviewService` multi-monitor overview; `OverviewWindow`; cascade layout; search; drag ghost | [`overview.md`](overview.md) |
 | `IndicatorService` / `WorkspaceIndicatorWindow`; move mode; pinned ring modes | [`indicators.md`](indicators.md) |
 | `WorkspaceTransitionCoordinator` + HUD/curtain engines; rapid-switch cancel | [`transitions.md`](transitions.md) |
 | `%APPDATA%` config/layout/presets; `AppConfig` knobs; Settings pages + `SettingsSession` | [`settings-config.md`](settings-config.md) |
@@ -31,7 +31,7 @@ Each row is a **tier-1 cue**: match the task, then `Read` only that path.
 | `Core/` | Workspace model, monitors, window classification |
 | `Services/` | Hotkeys, visibility, events, indicators, overview, transition, elevation, layout, presets |
 | `Config/` | `AppConfig`, JSON load/save |
-| `Overview/` | Snapshot/thumbnail/layout helpers for Exposé |
+| `Overview/` | Snapshot/thumbnail/layout helpers for the overview |
 | `Settings/` | WPF-UI settings shell and pages |
 | `Native/` | P/Invoke |
 | `Localization/` + `Resources/` | en / pt-BR strings |

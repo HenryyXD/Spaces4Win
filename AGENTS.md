@@ -32,7 +32,7 @@ Config / layout live under `%APPDATA%\Spaces4Win\` (`config.json`, `window-layou
 | Sparse workspaces, sticky, switch/move/insert/delete | [`docs/workspaces.md`](docs/workspaces.md) |
 | Cloak vs SW_HIDE, ownership, classifier, WinEvents | [`docs/visibility.md`](docs/visibility.md) |
 | CapsLock chords, monitor targeting, foreign activation | [`docs/hotkeys.md`](docs/hotkeys.md) |
-| Mission Control overview, thumbnails, drag | [`docs/overview.md`](docs/overview.md) |
+| Overview, thumbnails, drag | [`docs/overview.md`](docs/overview.md) |
 | Floating dots, move mode, pinned indicator | [`docs/indicators.md`](docs/indicators.md) |
 | HUD/curtain transitions, cancel-on-rapid-switch | [`docs/transitions.md`](docs/transitions.md) |
 | `AppConfig`, settings UI, persistence paths | [`docs/settings-config.md`](docs/settings-config.md) |

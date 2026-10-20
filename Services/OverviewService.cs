@@ -29,7 +29,7 @@ public sealed class OverviewService : IDisposable
     public bool IsOpen => _open.Count > 0;
 
     /// <summary>
-    /// Toggle Mission Control-style overview on every connected monitor.
+    /// Toggle the overview on every connected monitor.
     /// Esc / selecting a window / toggling again closes all overlays together.
     /// Drag-drop refreshes overlays in place without closing.
     /// </summary>

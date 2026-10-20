@@ -1,6 +1,6 @@
 # Spaces4Win
 
-**Per-monitor virtual workspaces for Windows** — like macOS Spaces / Mission Control, but each display keeps its own independent spaces.
+**Per-monitor virtual workspaces for Windows** — each display keeps its own independent spaces.
 
 Windows’ built-in Virtual Desktops switch **every monitor at once**. Spaces4Win instead shows and hides windows **per monitor**, so you can keep research on the left display and coding spaces on the right without them fighting each other.
 
@@ -17,7 +17,7 @@ Windows’ built-in Virtual Desktops switch **every monitor at once**. Spaces4Wi
 - **Sparse workspace ids (1–9)** — create only the spaces you use (e.g. `1`, `3`, `7`); gaps are fine
 - **CapsLock chord hotkeys** — CapsLock acts as a modifier while held; editable in Settings
 - **Floating dot indicators** — click-through overlay per monitor (optional; movable)
-- **Overview (Exposé)** — see every space on every monitor and jump or drag windows
+- **Overview** — see every space on every monitor and jump or drag windows
 - **Sticky windows** — pin a window so it stays visible across spaces on that monitor
 - **Live tracking** — new and moved windows join the right space via WinEvents (no polling)
 - **Safe shutdown** — hidden windows come back minimized (no flash, no focus steal)
@@ -78,7 +78,7 @@ Hotkeys apply to the monitor under the **mouse cursor** (unless noted). All chor
 | `CapsLock+Shift+F` | Move focused window to a free workspace without following |
 | `CapsLock+Ctrl+F` | Move focused window to a free workspace and switch to it |
 | `CapsLock+Backspace` | Delete active workspace (windows move to previous id, else next; cannot delete the last one) |
-| `CapsLock+\`` | Overview (Exposé) on all monitors. On ABNT2 this is the key left of `1`; Settings and the first-run window show the label for your keyboard |
+| `CapsLock+\`` | Overview on all monitors. On ABNT2 this is the key left of `1`; Settings and the first-run window show the label for your keyboard |
 | `CapsLock+P` | Session presets (named layouts) |
 | `CapsLock+Ctrl+Alt+0` … `9` | Save the current layout to that preset slot |
 | `CapsLock+Alt+0` … `9` | Open that preset on the focused monitor |
@@ -195,8 +195,3 @@ Spaces4Win runs locally. Settings and window→workspace layout are stored under
 
 [MIT](LICENSE) © Spaces4Win contributors
 
----
-
-## Acknowledgments
-
-Inspired by the workflow of macOS Spaces and Mission Control, and by the practical constraints of Win32 window management on multi-monitor Windows setups.

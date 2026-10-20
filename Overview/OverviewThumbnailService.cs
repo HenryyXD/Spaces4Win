@@ -56,7 +56,7 @@ public sealed class OverviewThumbnailService : IDisposable
         };
         var props = new NativeMethods.DWM_THUMBNAIL_PROPERTIES
         {
-            // Full-frame (including non-client chrome) for more faithful Mission Control thumbs.
+            // Full-frame (including non-client chrome) so thumbs match the real window.
             dwFlags = NativeMethods.DWM_TNP_VISIBLE
                       | NativeMethods.DWM_TNP_RECTDESTINATION
                       | NativeMethods.DWM_TNP_OPACITY,

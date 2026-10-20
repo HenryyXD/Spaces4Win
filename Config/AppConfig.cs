@@ -114,7 +114,7 @@ public sealed class AppConfig
     /// <summary>Delete the current workspace on the monitor under the cursor (default CapsLock+Backspace).</summary>
     public HotkeyBinding DeleteWorkspaceHotkey { get; set; } = CreateDefaultDeleteWorkspaceHotkey();
 
-    /// <summary>Open Mission Control-style overview on all monitors (default CapsLock+`).</summary>
+    /// <summary>Open the overview on all monitors (default CapsLock+`).</summary>
     public HotkeyBinding OverviewHotkey { get; set; } = CreateDefaultOverviewHotkey();
 
     /// <summary>Previous existing workspace (default CapsLock+Left). Does not create.</summary>

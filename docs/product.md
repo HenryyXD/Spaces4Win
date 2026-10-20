@@ -19,7 +19,7 @@ Spaces4Win gives each physical monitor its own sparse set of virtual workspaces 
 - Runs from the **system tray** (no main window as app chrome).
 - Floating **dot indicators** per monitor (optional).
 - Global **CapsLock-chord** hotkeys (editable).
-- **Overview** (Mission Control / Exposé) on all monitors (`CapsLock+\`` by default).
+- **Overview** on all monitors (`CapsLock+\`` by default).
 - Settings window (WPF-UI) for monitors, hotkeys, appearance, behavior, elevation, startup.
 - UI languages: System / en / pt-BR.
 

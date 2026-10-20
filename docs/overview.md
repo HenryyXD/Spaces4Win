@@ -1,10 +1,10 @@
 ---
 summary: OverviewService opens one OverviewWindow per monitor; thumbnails, cascade layout, search filter, drag-ghost; Esc closes all together.
-when: Exposé/overview UI, thumbnail capture, drag between spaces, overview search.
+when: overview UI, thumbnail capture, drag between spaces, overview search.
 sources: [Services/OverviewService.cs, OverviewWindow.xaml.cs, Overview/]
 ---
 
-# Overview (Exposé)
+# Overview
 
 ## Entry
 
