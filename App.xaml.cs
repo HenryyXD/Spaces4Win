@@ -29,6 +29,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        DiagnosticLog.Initialize();
 
         if (TryHandleControlCommand(e.Args))
         {
@@ -42,35 +43,32 @@ public partial class App : Application
         _singleInstance = SingleInstanceGuard.TryAcquire(wait);
         if (_singleInstance is null)
         {
+            DiagnosticLog.Info("Another instance is already running; exiting.");
             Shutdown(0);
             // OnExplicitShutdown: ensure the process does not linger without a host.
             Environment.Exit(0);
             return;
         }
 
+        DiagnosticLog.BeginSession();
         DispatcherUnhandledException += (_, args) =>
         {
             // Keep tray host alive; overlays/theme must not take down the process.
+            DiagnosticLog.Error("UI dispatcher exception (process kept alive)", args.Exception);
             args.Handled = true;
-            try
-            {
-                System.Diagnostics.Debug.WriteLine(args.Exception);
-            }
-            catch
-            {
-                // ignore
-            }
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine(args.ExceptionObject);
-            }
-            catch
-            {
-                // ignore
-            }
+            var ex = args.ExceptionObject as Exception;
+            var message = args.IsTerminating
+                ? "Unhandled exception; process is terminating"
+                : "Unhandled exception";
+            DiagnosticLog.Critical(message, ex);
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            DiagnosticLog.Error("Unobserved task exception", args.Exception);
+            args.SetObserved();
         };
 
         _localization = new LocalizationService();
@@ -80,8 +78,11 @@ public partial class App : Application
 
         if (!_services.IsRunning)
         {
+            DiagnosticLog.Info("Startup stopped before the tray host (elevation relaunch or shutdown).");
             return;
         }
+
+        DiagnosticLog.StartUiWatchdog(Dispatcher);
 
         // Overlays must never remain Application.MainWindow (WPF-UI theme Apply targets it).
         MainWindow = null;
@@ -123,6 +124,7 @@ public partial class App : Application
     {
         if (args.Any(a => a.Equals("--quit", StringComparison.OrdinalIgnoreCase)))
         {
+            DiagnosticLog.Info("--quit requested");
             var code = AppControlChannel.QuitAndWait(TimeSpan.FromSeconds(20));
             Shutdown(code);
             return true;
@@ -143,9 +145,9 @@ public partial class App : Application
                     hotkeys: null,
                     indicators: null).RecoverIfNeeded();
             }
-            catch
+            catch (Exception ex)
             {
-                // best effort
+                DiagnosticLog.Error("--recover-hidden failed", ex);
             }
 
             Shutdown(0);
@@ -215,6 +217,18 @@ public partial class App : Application
     }
 
     protected override void OnExit(ExitEventArgs e)
+    {
+        try
+        {
+            OnExitCore(e);
+        }
+        finally
+        {
+            DiagnosticLog.EndSession();
+        }
+    }
+
+    private void OnExitCore(ExitEventArgs e)
     {
         _quitWatch?.Dispose();
         _quitWatch = null;

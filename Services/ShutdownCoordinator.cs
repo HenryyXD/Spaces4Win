@@ -44,6 +44,7 @@ public sealed class ShutdownCoordinator
         }
 
         _ran = true;
+        DiagnosticLog.Info("Reveal hidden windows and persist layout.");
 
         if (_workspaceManager is not null)
         {
@@ -61,18 +62,18 @@ public sealed class ShutdownCoordinator
         {
             _persistLayout?.Invoke();
         }
-        catch
+        catch (Exception ex)
         {
-            // still proceed with reveal
+            DiagnosticLog.Error("Shutdown layout persist failed", ex);
         }
 
         try
         {
             _exitAllFullscreen?.Invoke();
         }
-        catch
+        catch (Exception ex)
         {
-            // still proceed with reveal
+            DiagnosticLog.Error("Shutdown fullscreen exit failed", ex);
         }
 
         var snapshot = _workspaceManager.SnapshotManagedWindows();
@@ -107,6 +108,7 @@ public sealed class ShutdownCoordinator
             Windows = Array.Empty<JournalWindowEntry>().ToList()
         });
         _journal.Clear();
+        DiagnosticLog.Info("Shutdown reveal finished.");
 
         _indicators?.Dispose();
     }

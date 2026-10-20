@@ -56,9 +56,12 @@ public sealed class AppServices : IDisposable
         {
             if (ElevationService.TryRelaunchElevated())
             {
+                DiagnosticLog.Info("Relaunching elevated.");
                 System.Windows.Application.Current.Shutdown();
                 return;
             }
+
+            DiagnosticLog.Warn("Elevated relaunch was requested but did not start.");
         }
 
         // Register/update the logon task after we know our elevation state so Highest
@@ -100,6 +103,7 @@ public sealed class AppServices : IDisposable
 
         HotkeyService = new HotkeyService(WorkspaceManager);
         HotkeyService.StatusMessage += (_, msg) => StatusMessage?.Invoke(this, msg);
+        HotkeyService.RegistrationFailed += (_, msg) => DiagnosticLog.Error(msg);
 
         TransitionCoordinator = new WorkspaceTransitionCoordinator(
             WorkspaceManager,
@@ -190,6 +194,8 @@ public sealed class AppServices : IDisposable
             Localization?.Get(key) ?? key;
 
         PresetApply = new PresetApplyService(WorkspaceManager);
+        PresetApply.Log += (_, msg) => DiagnosticLog.Error(msg);
+        Visibility.Log += (_, msg) => DiagnosticLog.Error(msg);
         PresetBrowser = new PresetBrowserController(
             WorkspaceManager,
             MonitorTracker,
@@ -253,6 +259,7 @@ public sealed class AppServices : IDisposable
         WriteUncleanJournal();
         SystemEvents.PowerModeChanged += OnPowerModeChanged;
         IsRunning = true;
+        DiagnosticLog.Info("Services started.");
     }
 
     public event EventHandler<string>? StatusMessage;
@@ -318,7 +325,7 @@ public sealed class AppServices : IDisposable
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine($"Startup registration failed: {ex.Message}");
+            DiagnosticLog.Error("Startup registration failed", ex);
         }
         catch
         {
@@ -411,6 +418,7 @@ public sealed class AppServices : IDisposable
         }
 
         _shutdownStarted = true;
+        DiagnosticLog.Info("Shutdown started.");
         ForeignWorkspaceActivation?.Dispose();
         ForeignWorkspaceActivation = null;
         WindowEventService?.Dispose();
@@ -461,6 +469,7 @@ public sealed class AppServices : IDisposable
 
     private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
     {
+        DiagnosticLog.Info($"Power mode {e.Mode}.");
         if (e.Mode != PowerModes.Resume || _shutdownStarted || !IsRunning)
         {
             return;
@@ -484,9 +493,9 @@ public sealed class AppServices : IDisposable
                 WorkspaceManager.ReapplyVisibilityFromAssignments();
                 IndicatorService?.RepairLayeredWindows();
             }
-            catch
+            catch (Exception ex)
             {
-                // best effort after resume
+                DiagnosticLog.Error("Power resume visibility reapply failed", ex);
             }
         });
     }

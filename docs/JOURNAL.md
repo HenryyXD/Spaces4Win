@@ -15,6 +15,18 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 
 ---
 
+### 2026-10-20 — Diagnostic log for crash and UI stall
+- Area: elevation / startup
+- Fact: `%APPDATA%\Spaces4Win\logs\spaces4win.log` records unhandled exceptions, visibility/transition/preset/shutdown failures, and UI-thread stalls (watchdog, 8s). `session.pid` flags a session that did not exit cleanly. Breadcrumbs (switch, overview, preset) are kept on the error entry.
+- Source: `Services/DiagnosticLog.cs`, `App.OnStartup`
+- Promoted: yes → docs/settings-config.md, docs/elevation-startup.md
+
+### 2026-10-20 — Hidden conhost and RemoteApp hosts in overview
+- Area: visibility | overview
+- Fact: Invisible `ConsoleWindowClass` (`node`, `wslhost`) and `TscShellContainerClass` (`RemoteApp` / `msrdc`) were managed because they have a title and a normal rect, so they showed up as overview cards. Visible, minimized, or cloaked consoles stay managed. Workspace restore still applies when `WasHiddenByUs` even if the classifier rejects the HWND.
+- Source: `WindowClassifier.IsInvisibleHelperHost`, `WorkspaceManager.ApplyVisibilityFromAssignments`
+- Promoted: yes → docs/visibility.md
+
 ### 2026-08-16 — Session presets (named layouts)
 - Area: presets | hotkeys | settings
 - Fact: 10 slots in `presets.json` (UI 1–10). Caps+P browser + confirm load; Caps+Ctrl+Alt+digit save + toast; Caps+Alt+digit focus slot. Apply closes unmatched managed windows, places matches, launches missing paths. Cold-start layout still never launches.

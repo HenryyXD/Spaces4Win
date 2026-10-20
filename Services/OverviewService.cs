@@ -37,9 +37,12 @@ public sealed class OverviewService : IDisposable
     {
         if (_open.Count > 0)
         {
+            DiagnosticLog.Breadcrumb("overview close");
             CloseAll();
             return;
         }
+
+        DiagnosticLog.Breadcrumb("overview open");
 
         var monitors = _workspaceManager.Monitors.ToList();
         if (monitors.Count == 0)

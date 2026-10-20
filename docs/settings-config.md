@@ -13,6 +13,7 @@ sources: [Config/AppConfig.cs, Config/ConfigService.cs, Settings/]
 | `%APPDATA%\Spaces4Win\config.json` | `ConfigService` (camelCase JSON, enum strings) |
 | `%APPDATA%\Spaces4Win\window-layout.json` | `WindowLayoutStore` |
 | `%APPDATA%\Spaces4Win\presets.json` | `PresetStore` (named session presets slots 0–9) |
+| `%APPDATA%\Spaces4Win\logs\spaces4win.log` | `DiagnosticLog` (crashes, UI stalls, switch/overview/preset/shutdown). Rotates to `.1`–`.3`. `session.pid` remains if the process did not exit cleanly. |
 
 `AppConfig.CreateDefault()` seeds first-run defaults (including CapsLock chord tables).
 

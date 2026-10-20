@@ -93,6 +93,22 @@ public static class WindowClassifier
                && (exStyle & NativeMethods.WS_EX_APPWINDOW) == 0;
     }
 
+    /// <summary>
+    /// Hidden <c>ConsoleWindowClass</c> (node/wslhost conhost) and hidden
+    /// <c>TscShellContainerClass</c> (WSLg "RemoteApp" frame). Visible, minimized,
+    /// or cloaked windows stay eligible so a real console on a workspace is kept.
+    /// </summary>
+    internal static bool IsInvisibleHelperHost(string className, bool visible, bool minimized, bool cloaked)
+    {
+        if (visible || minimized || cloaked || string.IsNullOrEmpty(className))
+        {
+            return false;
+        }
+
+        return className.Equals("ConsoleWindowClass", StringComparison.OrdinalIgnoreCase)
+               || className.Equals("TscShellContainerClass", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static bool IsManagedWindow(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
@@ -163,6 +179,14 @@ public static class WindowClassifier
 
         var className = GetClassName(hwnd);
         if (ShellClassNames.Contains(className))
+        {
+            return false;
+        }
+
+        // Hidden conhost / WSLg shell hosts (node, wslhost, msrdc "RemoteApp").
+        // They keep a titled HWND but are not user windows. A console we cloaked
+        // stays IsWindowVisible; one we SW_HIDE is restored via WasHiddenByUs.
+        if (IsInvisibleHelperHost(className, NativeMethods.IsWindowVisible(hwnd), minimized, IsCloaked(hwnd)))
         {
             return false;
         }

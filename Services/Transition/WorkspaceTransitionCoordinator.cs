@@ -1,6 +1,7 @@
 using Spaces4Win.Config;
 using Spaces4Win.Core;
 using Spaces4Win.Native;
+using Spaces4Win.Services;
 using Spaces4Win.Services.Animation;
 
 namespace Spaces4Win.Services.Transition;
@@ -77,6 +78,8 @@ public sealed class WorkspaceTransitionCoordinator : IWorkspaceNavigator, IDispo
         {
             return;
         }
+
+        DiagnosticLog.Breadcrumb($"switch {monitorId} -> {workspaceId} create={createIfMissing}");
 
         CancellationTokenSource? toCancel = null;
         bool startNow;
@@ -305,6 +308,7 @@ public sealed class WorkspaceTransitionCoordinator : IWorkspaceNavigator, IDispo
         }
         catch (Exception ex)
         {
+            DiagnosticLog.Error($"Workspace transition failed for {monitorId} -> {workspaceId}", ex);
             ApplySwitch();
             return TransitionResult.Fallback(ex.Message);
         }

@@ -39,3 +39,5 @@ Single instance: `SingleInstanceGuard` (`Local\Spaces4Win.SingleInstance`). A se
 ## Crash recovery
 
 `SessionJournal` records in-flight hidden state. Early in `Start`, a probe `ShutdownCoordinator.RecoverIfNeeded()` restores windows if the previous session died mid-hide. Standalone: `Spaces4Win.exe --recover-hidden`.
+
+`DiagnosticLog` writes `%APPDATA%\Spaces4Win\logs\spaces4win.log`. Unhandled UI/domain/task exceptions, visibility and transition failures, and a UI-thread stall (no dispatcher pump for 8s) are appended there. A leftover `session.pid` on the next start means the previous process did not reach a clean shutdown.

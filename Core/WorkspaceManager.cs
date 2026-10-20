@@ -326,10 +326,19 @@ public sealed class WorkspaceManager
             }
         }
 
+        var dropped = new List<IntPtr>();
         foreach (var (hwnd, show) in actions)
         {
-            if (!NativeMethods.IsWindow(hwnd) || !WindowClassifier.IsManagedWindow(hwnd))
+            if (!NativeMethods.IsWindow(hwnd))
             {
+                continue;
+            }
+
+            // Hidden conhost/RemoteApp hosts fail the classifier. A console we
+            // SW_HIDE for an inactive space must still be restored.
+            if (!WindowClassifier.IsManagedWindow(hwnd) && !_visibility.WasHiddenByUs(hwnd))
+            {
+                dropped.Add(hwnd);
                 continue;
             }
 
@@ -341,6 +350,11 @@ public sealed class WorkspaceManager
             {
                 HideOrDrop(hwnd);
             }
+        }
+
+        foreach (var hwnd in dropped)
+        {
+            DropWindowFromWorkspaces(hwnd);
         }
     }
 
@@ -1890,6 +1904,13 @@ public sealed class WorkspaceManager
 
         if (!WindowClassifier.IsManagedWindow(hwnd))
         {
+            // SW_HIDE of a real console clears visibility, so the helper-host
+            // rule rejects it. Keep it until we show the workspace again.
+            if (_visibility.WasHiddenByUs(hwnd))
+            {
+                return;
+            }
+
             DropWindowFromWorkspaces(hwnd);
             return;
         }

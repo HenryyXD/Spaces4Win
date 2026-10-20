@@ -1,5 +1,6 @@
 using Spaces4Win.Core;
 using Spaces4Win.Native;
+using Spaces4Win.Services;
 using System.IO;
 
 namespace Spaces4Win.Services.Presets;
@@ -78,6 +79,8 @@ public sealed class PresetApplyService
         {
             return new PresetApplyResult(0, 0, 0, 0, Array.Empty<string>());
         }
+
+        DiagnosticLog.Breadcrumb($"preset apply slot={slot.Slot} name={slot.Name}");
 
         _workspaceManager.EnsureWorkspacesFromLayoutDocument(slot.Layout);
 
