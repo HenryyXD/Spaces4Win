@@ -91,6 +91,7 @@ public sealed class AppServices : IDisposable
 
         // After a window is hidden, schedule a background peek-capture so the
         // overview can show real thumbnails without blocking on the UI thread.
+        Visibility.WindowHiding += (_, hwnd) => CaptureCache.CaptureNow(hwnd);
         Visibility.WindowHidden += (_, hwnd) => CaptureCache.RequestCapture(hwnd);
         // Invalidate when window becomes active again (content changed since last capture).
         Visibility.WindowShown += (_, hwnd) => CaptureCache.Invalidate(hwnd);

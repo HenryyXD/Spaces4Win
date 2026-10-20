@@ -27,6 +27,25 @@ public sealed class WindowCaptureCache
     public ImageSource? Get(IntPtr hwnd) =>
         _cache.TryGetValue(hwnd, out var v) ? v : null;
 
+    /// <summary>
+    /// Grab a thumbnail while the window is still on screen. Call before cloak/SW_HIDE.
+    /// A flat black PrintWindow is discarded so a later peek can try again.
+    /// </summary>
+    public void CaptureNow(IntPtr hwnd)
+    {
+        if (!NativeMethods.IsWindow(hwnd) || Get(hwnd) is not null)
+        {
+            return;
+        }
+
+        var shot = OverviewWindowCapture.TryCaptureVisible(hwnd)
+                   ?? OverviewWindowCapture.TryCapture(hwnd);
+        if (shot is not null)
+        {
+            _cache[hwnd] = shot;
+        }
+    }
+
     /// <summary>Returns true if a capture attempt has been made (result may be null on failure).</summary>
     public bool HasEntry(IntPtr hwnd) => _cache.ContainsKey(hwnd);
 
@@ -36,7 +55,7 @@ public sealed class WindowCaptureCache
     /// </summary>
     public void RequestCapture(IntPtr hwnd, Action<IntPtr>? onComplete = null)
     {
-        if (!NativeMethods.IsWindow(hwnd) || _cache.ContainsKey(hwnd))
+        if (!NativeMethods.IsWindow(hwnd) || Get(hwnd) is not null)
         {
             return;
         }
@@ -55,7 +74,11 @@ public sealed class WindowCaptureCache
                 {
                     result = OverviewWindowCapture.TryCapture(hwnd);
                 });
-                _cache[hwnd] = result;
+                if (result is not null)
+                {
+                    _cache[hwnd] = result;
+                }
+
                 onComplete?.Invoke(hwnd);
             }
             catch

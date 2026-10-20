@@ -52,6 +52,8 @@ Decides managed vs ignored top-level windows using **style/ownership heuristics*
 
 Hidden `ConsoleWindowClass` (background `node` / `wslhost` conhost) and hidden `TscShellContainerClass` (WSLg “RemoteApp” frame) are not managed: they have a title and a normal rect but are not user windows. A visible, iconic, or cloaked console stays managed. `SW_HIDE` of a real console fails this check; show/hide still runs when `WasHiddenByUs` so the workspace can restore it.
 
+`ApplicationFrameWindow` with `DWM_CLOAKED_SHELL` is a suspended UWP (Configurações closed, process still resident). It is not an open window. A frame Spaces4Win cloaked itself stays managed (`DWM_CLOAKED_APP`).
+
 ## `WindowEventService`
 
 `SetWinEventHook` for create/show/**hide**/destroy/location/move-size/**minimize start/end** so new or dragged windows join the correct monitor’s **active** workspace, tray hides unmanage, and taskbar minimize stays tracked. Must respect sticky, elevation failures, and internal transitions.

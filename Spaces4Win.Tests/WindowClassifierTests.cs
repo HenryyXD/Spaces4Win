@@ -25,4 +25,20 @@ public class WindowClassifierTests
             expected,
             WindowClassifier.IsInvisibleHelperHost(className, visible, minimized, cloaked));
     }
+
+    [Theory]
+    [InlineData("ApplicationFrameWindow", true, false, true)]
+    [InlineData("ApplicationFrameWindow", true, true, false)]
+    [InlineData("ApplicationFrameWindow", false, false, false)]
+    [InlineData("Chrome_WidgetWin_1", true, false, false)]
+    public void Suspended_uwp_frame_is_not_an_open_window(
+        string className,
+        bool shellCloaked,
+        bool minimized,
+        bool suspended)
+    {
+        Assert.Equal(
+            suspended,
+            WindowClassifier.IsSuspendedUwpFrame(className, shellCloaked, minimized));
+    }
 }

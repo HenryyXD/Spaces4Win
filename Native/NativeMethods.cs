@@ -318,12 +318,17 @@ internal static class NativeMethods
 
     public const int DWMWA_CLOAK = 13;
     public const int DWMWA_CLOAKED = 14;
+    /// <summary>DWMWA_CLOAKED bit: Shell suspended the window (closed UWP still resident).</summary>
+    public const int DWM_CLOAKED_SHELL = 0x2;
 
     [DllImport("dwmapi.dll")]
     public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 
     [DllImport("dwmapi.dll")]
     public static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmFlush();
 
     public const uint DWM_TNP_RECTDESTINATION = 0x00000001;
     public const uint DWM_TNP_VISIBLE = 0x00000008;
@@ -508,6 +513,11 @@ internal static class NativeMethods
     public const int VK_NUMPAD0 = 0x60;
     public const int VK_NUMPAD9 = 0x69;
     public const int VK_LBUTTON = 0x01;
+    public const int VK_SNAPSHOT = 0x2C;
+    public const int VK_LSHIFT = 0xA0;
+    public const int VK_RSHIFT = 0xA1;
+    public const int VK_LMENU = 0xA4;
+    public const int VK_RMENU = 0xA5;
     public const int VK_LWIN = 0x5B;
     public const int VK_RWIN = 0x5C;
 
@@ -682,6 +692,29 @@ internal static class NativeMethods
 
     [DllImport("gdi32.dll")]
     public static extern bool DeleteDC(IntPtr hdc);
+
+    public const int COLORONCOLOR = 3;
+    public const uint CLR_INVALID = 0xFFFFFFFF;
+
+    [DllImport("gdi32.dll")]
+    public static extern uint GetPixel(IntPtr hdc, int x, int y);
+
+    [DllImport("gdi32.dll")]
+    public static extern int SetStretchBltMode(IntPtr hdc, int mode);
+
+    [DllImport("gdi32.dll")]
+    public static extern bool StretchBlt(
+        IntPtr hdcDest,
+        int xDest,
+        int yDest,
+        int wDest,
+        int hDest,
+        IntPtr hdcSrc,
+        int xSrc,
+        int ySrc,
+        int wSrc,
+        int hSrc,
+        int rop);
 
     [DllImport("gdi32.dll")]
     public static extern bool BitBlt(

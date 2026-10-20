@@ -105,6 +105,13 @@ public sealed class OverviewService : IDisposable
             return false;
         }
 
+        // Print Screen and Win+Shift+S must reach the shell. The hook otherwise
+        // swallows every key so the app under the overview does not see it.
+        if (ShouldPassScreenshotToSystem(vkCode, modifiers))
+        {
+            return false;
+        }
+
         // Caps+` (and OemTilde / VK_OEM_3) closes overview — same as Esc / toggle.
         if (capsHeld &&
             modifiers == ModifierKeys.None &&
@@ -122,6 +129,23 @@ public sealed class OverviewService : IDisposable
 
         RunOnUi(() => DispatchGlobalKey(key, modifiers));
         return true;
+    }
+
+    /// <summary>
+    /// Print Screen, Alt+Print Screen, and Win chords (Win+Shift+S, Win+Print Screen).
+    /// Shift and Alt are passed through so the shell still sees them as held.
+    /// </summary>
+    internal static bool ShouldPassScreenshotToSystem(uint vkCode, ModifierKeys modifiers)
+    {
+        if (vkCode is NativeMethods.VK_SNAPSHOT
+            or NativeMethods.VK_LWIN or NativeMethods.VK_RWIN
+            or NativeMethods.VK_LSHIFT or NativeMethods.VK_RSHIFT
+            or NativeMethods.VK_LMENU or NativeMethods.VK_RMENU)
+        {
+            return true;
+        }
+
+        return modifiers.HasFlag(ModifierKeys.Windows);
     }
 
     private static bool IsOverviewToggleVirtualKey(uint vkCode)

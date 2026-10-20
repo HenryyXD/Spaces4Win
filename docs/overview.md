@@ -25,13 +25,14 @@ Keyboard while open (via `HotkeyService.OverviewInputFilter` LL hook — does no
 - **Ctrl+←/→** → focus adjacent overview window chrome.
 - **Esc** → clear shared search, then close all.
 - **Caps+`** → closes overview explicitly in the filter (uses hook `_capsHeld`; `GetAsyncKeyState(VK_CAPITAL)` is unreliable after Caps is swallowed). Same chord opens when closed via `OverviewAction`.
+- **Print Screen**, **Alt+Print Screen**, and **Win** chords (**Win+Shift+S**, **Win+Print Screen**) are not swallowed, so a screenshot of the overview still reaches the shell.
 
 While open, workspace commands may be gated via `WorkspaceManager.CommandsEnabled` (see service implementation when changing).
 
 ## Thumbnails
 
 - Visible windows (active workspace): live `DwmRegisterThumbnail` inset inside a rounded WPF frame (`ThumbInset` / `CornerRadius` — DWM itself is always rectangular).
-- Cloaked / `SW_HIDE` (inactive workspaces): `EnsurePeekCaptures` → `WindowVisibilityService.WithPeekVisible` (brief uncloak/`SW_SHOWNA`, no activate) → `OverviewWindowCapture` (`PrintWindow`) → cached WPF `Image`. Ownership stays `HiddenBySpaces4Win`. Icon fallback if capture fails.
+- Cloaked / `SW_HIDE` (inactive workspaces): capture **before** cloak (`WindowHiding` → screen BitBlt, because PrintWindow of Java/WPF/GPU windows is often solid black). Fallback: `EnsurePeekCaptures` → `WithPeekVisible` (uncloak, `DwmFlush`, no `SW_SHOWNA`) → `OverviewWindowCapture`. Flat black frames are discarded. Ownership stays `HiddenBySpaces4Win`. Icon fallback if capture fails.
 - Do **not** leave inactive windows uncloaked while overview is open (overlay is translucent).
 
 ## Supporting pieces (`Overview/`)

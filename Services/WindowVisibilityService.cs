@@ -39,6 +39,13 @@ public sealed class WindowVisibilityService
 
     public event EventHandler<string>? Log;
 
+    /// <summary>
+    /// Called while the window is still on screen, immediately before cloak or SW_HIDE.
+    /// Used to grab a thumbnail of composited windows (Java, WPF) that PrintWindow
+    /// paints black once they are cloaked.
+    /// </summary>
+    public event EventHandler<IntPtr>? WindowHiding;
+
     /// <summary>Called after a window is hidden into an inactive workspace.</summary>
     public event EventHandler<IntPtr>? WindowHidden;
 
@@ -281,6 +288,8 @@ public sealed class WindowVisibilityService
 
                 return true;
             }
+
+            RaiseWindowHiding(hwnd);
 
             if (!PreferSwHide && TrySetCloaked(hwnd, cloak: true))
             {
@@ -605,7 +614,8 @@ public sealed class WindowVisibilityService
             {
                 if (kind != PeekRevealKind.None)
                 {
-                    Thread.Sleep(16);
+                    NativeMethods.DwmFlush();
+                    Thread.Sleep(64);
                 }
 
                 action();
@@ -641,7 +651,8 @@ public sealed class WindowVisibilityService
                 {
                     if (kind != PeekRevealKind.None)
                     {
-                        Thread.Sleep(16);
+                        NativeMethods.DwmFlush();
+                        Thread.Sleep(64);
                     }
 
                     action(hwnd);
@@ -655,6 +666,25 @@ public sealed class WindowVisibilityService
         finally
         {
             EndInternalOperation();
+        }
+    }
+
+    private void RaiseWindowHiding(IntPtr hwnd)
+    {
+        try
+        {
+            if (!NativeMethods.IsWindowVisible(hwnd) ||
+                NativeMethods.IsIconic(hwnd) ||
+                WindowClassifier.IsCloaked(hwnd))
+            {
+                return;
+            }
+
+            WindowHiding?.Invoke(this, hwnd);
+        }
+        catch (Exception ex)
+        {
+            Log?.Invoke(this, $"Thumbnail capture before hide failed for {hwnd}: {ex.Message}");
         }
     }
 

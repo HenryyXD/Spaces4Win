@@ -192,10 +192,14 @@ public static class WindowClassifier
         }
 
         // UWP host frame without a title is an empty shell host, not an app.
+        // A titled frame the Shell has cloaked (Settings after close) is the same:
+        // the process is resident, the window is not open. Our own cloak is
+        // DWM_CLOAKED_APP, so a real Settings window on another space stays.
         if (string.Equals(className, "ApplicationFrameWindow", StringComparison.OrdinalIgnoreCase))
         {
             var frameTitle = GetWindowTitle(hwnd);
-            if (string.IsNullOrWhiteSpace(frameTitle))
+            if (string.IsNullOrWhiteSpace(frameTitle) ||
+                IsSuspendedUwpFrame(className, IsShellCloaked(hwnd), minimized))
             {
                 return false;
             }
@@ -320,7 +324,18 @@ public static class WindowClassifier
         return true;
     }
 
-    public static bool IsCloaked(IntPtr hwnd)
+    public static bool IsCloaked(IntPtr hwnd) => GetCloakState(hwnd) != 0;
+
+    /// <summary>Shell-suspended UWP host, not a window Spaces4Win cloaked.</summary>
+    public static bool IsShellCloaked(IntPtr hwnd) =>
+        (GetCloakState(hwnd) & NativeMethods.DWM_CLOAKED_SHELL) != 0;
+
+    internal static bool IsSuspendedUwpFrame(string className, bool shellCloaked, bool minimized) =>
+        string.Equals(className, "ApplicationFrameWindow", StringComparison.OrdinalIgnoreCase)
+        && shellCloaked
+        && !minimized;
+
+    private static int GetCloakState(IntPtr hwnd)
     {
         try
         {
@@ -329,11 +344,11 @@ public static class WindowClassifier
                 NativeMethods.DWMWA_CLOAKED,
                 out var cloaked,
                 sizeof(int));
-            return hr == 0 && cloaked != 0;
+            return hr == 0 ? cloaked : 0;
         }
         catch
         {
-            return false;
+            return 0;
         }
     }
 

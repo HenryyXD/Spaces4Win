@@ -15,6 +15,24 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 
 ---
 
+### 2026-10-20 — Suspended Settings frame looked open
+- Area: visibility | overview
+- Fact: After Configurações closes, `ApplicationFrameWindow` stays visible to `IsWindowVisible` but `DWM_CLOAKED_SHELL` (value 2). That frame was managed and showed as a card. Shell-cloaked, non-minimized frames are not managed. Our cloak remains `DWM_CLOAKED_APP`.
+- Source: `WindowClassifier.IsShellCloaked`, live hwnd pid 1624 class ApplicationFrameWindow title Configurações cloak=2
+- Promoted: yes → docs/visibility.md
+
+### 2026-10-20 — Inactive workspace thumbnails were black
+- Area: overview | visibility
+- Fact: PrintWindow after cloak returns a flat black bitmap for composited windows (Rider/Java, WPF). Capture now runs in `WindowHiding`, while the window is still on screen (`BitBlt` + `CAPTUREBLT`). Uniform-dark frames are not cached.
+- Source: `WindowVisibilityService.WindowHiding`, `OverviewWindowCapture.TryCaptureVisible`, `WindowCaptureCache.CaptureNow`
+- Promoted: yes → docs/overview.md
+
+### 2026-10-20 — Screenshot shortcuts while overview is open
+- Area: overview | hotkeys
+- Fact: The overview LL filter swallowed Print Screen and Win+Shift+S, so the shell never captured the Caps+` screen. Those chords (and Shift/Alt/Win holds) now pass through.
+- Source: `OverviewService.ShouldPassScreenshotToSystem`
+- Promoted: yes → docs/overview.md
+
 ### 2026-10-20 — Diagnostic log for crash and UI stall
 - Area: elevation / startup
 - Fact: `%APPDATA%\Spaces4Win\logs\spaces4win.log` records unhandled exceptions, visibility/transition/preset/shutdown failures, and UI-thread stalls (watchdog, 8s). `session.pid` flags a session that did not exit cleanly. Breadcrumbs (switch, overview, preset) are kept on the error entry.
