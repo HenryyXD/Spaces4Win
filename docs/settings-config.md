@@ -20,6 +20,7 @@ sources: [Config/AppConfig.cs, Config/ConfigService.cs, Settings/]
 ## Major config groups
 
 - Startup / elevation (`StartWithWindows`, `ElevationPreference`)
+- First-run tips (`WelcomeRevision`, show while it is below `WelcomeWindow.CurrentRevision`). `WelcomeWindow` shows four lines (switch, overview chord from config, indicator dots, admin) and can apply `UseCtrlAltInsteadOfCapsLock`. Buttons use a local template so the WPF-UI button style does not hide them. About → Copy diagnostics copies the log tail.
 - Indicators & theme (`Theme`, `AccentColor`, `Language`, motion)
 - Hide mode (`HideInactiveFromSwitcher`)
 - Single fullscreen per workspace (`EnforceSingleFullscreenPerWorkspace`, default **true**)

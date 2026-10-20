@@ -255,7 +255,14 @@
   <data name="Settings.About.CopyDiagnostics" xml:space="preserve"><value>Copiar diagnóstico</value></data>
   <data name="Settings.About.CheckUpdates" xml:space="preserve"><value>Verificar atualizações</value></data>
   <data name="Settings.About.DiagnosticsCopied" xml:space="preserve"><value>Diagnóstico copiado para a área de transferência.</value></data>
-  <data name="Settings.About.RepoUrl" xml:space="preserve"><value>https://github.com/OWNER/Spaces4Win</value></data>
+  <data name="Settings.About.RepoUrl" xml:space="preserve"><value>https://github.com/HenryyXD/Spaces4Win</value></data>
+  <data name="Welcome.Title" xml:space="preserve"><value>O Spaces4Win está aberto</value></data>
+  <data name="Welcome.Switch" xml:space="preserve"><value>Trocar o espaço do monitor sob o ponteiro: {0} (1 a 9).</value></data>
+  <data name="Welcome.Overview" xml:space="preserve"><value>Ver todos os espaços: {0}.</value></data>
+  <data name="Welcome.Indicator" xml:space="preserve"><value>Os pontos em cada monitor são os espaços. Clique para trocar. Clique com o botão direito para mais opções.</value></data>
+  <data name="Welcome.Admin" xml:space="preserve"><value>Um programa aberto como administrador (IDE ou terminal) só obedece ao Spaces4Win se o Spaces4Win também estiver elevado. Na primeira vez, dá para elevar ou deixar essas janelas de fora.</value></data>
+  <data name="Welcome.GotIt" xml:space="preserve"><value>Entendi</value></data>
+  <data name="Welcome.UseCtrlAlt" xml:space="preserve"><value>Usar Ctrl+Alt em vez de CapsLock</value></data>
   <data name="Status.MoveMode" xml:space="preserve"><value>Modo mover: arraste os indicadores. Esc cancela.</value></data>
   <data name="Status.MoveFinished" xml:space="preserve"><value>Posições dos indicadores salvas.</value></data>
   <data name="Status.PositionsRestored" xml:space="preserve"><value>Posições do indicador restauradas.</value></data>

@@ -897,8 +897,8 @@ public sealed partial class AboutPageViewModel : PageViewModelBase
     [RelayCommand]
     private void OpenLogs()
     {
-        var dir = System.IO.Path.GetDirectoryName(Session.Services.ConfigService.ConfigPath);
-        if (dir is null) return;
+        var dir = DiagnosticLog.LogDirectory;
+        System.IO.Directory.CreateDirectory(dir);
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
             FileName = dir,
@@ -909,7 +909,15 @@ public sealed partial class AboutPageViewModel : PageViewModelBase
     [RelayCommand]
     private void CopyDiagnostics()
     {
-        var text = $"Spaces4Win {VersionText}\nConfig: {Session.Services.ConfigService.ConfigPath}\nElevated: {ElevationService.IsCurrentProcessElevated()}\nLanguage: {Loc.LanguagePreference}\nTheme: {Session.Draft.Theme}";
+        var logPath = DiagnosticLog.LogFilePath;
+        var tail = "";
+        if (System.IO.File.Exists(logPath))
+        {
+            var lines = System.IO.File.ReadAllLines(logPath);
+            tail = string.Join(Environment.NewLine, lines.TakeLast(80));
+        }
+
+        var text = $"Spaces4Win {VersionText}\nConfig: {Session.Services.ConfigService.ConfigPath}\nLog: {logPath}\nElevated: {ElevationService.IsCurrentProcessElevated()}\nLanguage: {Loc.LanguagePreference}\nTheme: {Session.Draft.Theme}\n\n{tail}";
         System.Windows.Clipboard.SetText(text);
         Session.StatusMessage = Loc.Get("Settings.About.DiagnosticsCopied");
     }

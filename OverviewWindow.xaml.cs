@@ -252,6 +252,7 @@ public sealed class OverviewWindow : Window
             if (_searchBox is not null)
             {
                 _searchBox.Text = _searchQuery;
+                PlaceSearchCaretAtEnd();
                 _searchBox.Visibility = string.IsNullOrEmpty(_searchQuery)
                     ? Visibility.Collapsed
                     : Visibility.Visible;
@@ -268,6 +269,30 @@ public sealed class OverviewWindow : Window
         {
             _overviewService.BroadcastSearchQuery(_searchQuery, this);
         }
+    }
+
+    /// <summary>
+    /// Typing arrives through the overview hook, which replaces Text. WPF puts the
+    /// caret back at index 0 unless we move it after that assignment.
+    /// </summary>
+    private void PlaceSearchCaretAtEnd()
+    {
+        if (_searchBox is null)
+        {
+            return;
+        }
+
+        var end = _searchBox.Text.Length;
+        _searchBox.CaretIndex = end;
+        _searchBox.Dispatcher.BeginInvoke(() =>
+        {
+            if (_searchBox is null || _searchBox.Text.Length != end)
+            {
+                return;
+            }
+
+            _searchBox.CaretIndex = end;
+        }, DispatcherPriority.Input);
     }
 
     public void ShowSearchBox(bool focus, bool selectAll = false)
@@ -819,34 +844,58 @@ public sealed class OverviewWindow : Window
 
         var close = new System.Windows.Controls.Button
         {
-            Content = "\uE711",
-            FontFamily = new WpfFontFamily("Segoe MDL2 Assets"),
-            FontSize = 10,
+            Content = new TextBlock
+            {
+                Text = "\uE711",
+                FontFamily = new WpfFontFamily("Segoe MDL2 Assets"),
+                FontSize = 10,
+                HorizontalAlignment = WpfHorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            },
             Width = 28,
             Height = 28,
             Padding = new Thickness(0),
             Margin = new Thickness(6, 0, -4, 0),
             Cursor = WpfCursors.Hand,
             ToolTip = _loc.Get("Overview.CloseWindow"),
-            Background = MediaBrushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Foreground = new SolidColorBrush(MediaColor.FromArgb(0xCC, 0xFF, 0xFF, 0xFF)),
             VerticalAlignment = VerticalAlignment.Center,
             Focusable = false
         };
         close.Style = CreateCloseButtonStyle();
+        close.Tag = CloseHitTag;
         close.Click += (_, e) =>
         {
             e.Handled = true;
             _pressCard = null;
-            _suppressClick = false;
+            _suppressClick = true;
             CloseManagedWindow(info.Hwnd);
         };
-        close.PreviewMouseLeftButtonDown += (_, e) => e.Handled = true;
+        // Do not mark this handled: that stops the button from raising Click,
+        // and the card then treats the X as a selection (which closes overview).
+        close.PreviewMouseLeftButtonDown += (_, _) =>
+        {
+            _pressCard = null;
+            _suppressClick = true;
+        };
         Grid.SetColumn(close, 2);
         header.Children.Add(close);
 
         return header;
+    }
+
+    private static readonly object CloseHitTag = new();
+
+    private static bool IsCloseChrome(DependencyObject? source)
+    {
+        for (var node = source; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is FrameworkElement element && ReferenceEquals(element.Tag, CloseHitTag))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static Style CreateCloseButtonStyle()
@@ -869,9 +918,11 @@ public sealed class OverviewWindow : Window
         borderFactory.AppendChild(contentFactory);
         template.VisualTree = borderFactory;
 
+        // Paint the border directly. A local Background on the button beats a trigger
+        // that only sets Button.Background, so the Windows red never showed.
         var hover = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
-        hover.Setters.Add(new Setter(System.Windows.Controls.Control.BackgroundProperty,
-            new SolidColorBrush(MediaColor.FromArgb(0x33, 0xFF, 0xFF, 0xFF))));
+        hover.Setters.Add(new Setter(Border.BackgroundProperty,
+            new SolidColorBrush(MediaColor.FromRgb(0xE8, 0x11, 0x23)), "Bd"));
         hover.Setters.Add(new Setter(System.Windows.Controls.Control.ForegroundProperty, MediaBrushes.White));
         template.Triggers.Add(hover);
 
@@ -880,8 +931,8 @@ public sealed class OverviewWindow : Window
             Property = System.Windows.Controls.Primitives.ButtonBase.IsPressedProperty,
             Value = true
         };
-        pressed.Setters.Add(new Setter(System.Windows.Controls.Control.BackgroundProperty,
-            new SolidColorBrush(MediaColor.FromRgb(0xC4, 0x2B, 0x1C))));
+        pressed.Setters.Add(new Setter(Border.BackgroundProperty,
+            new SolidColorBrush(MediaColor.FromRgb(0xC4, 0x2B, 0x1C)), "Bd"));
         pressed.Setters.Add(new Setter(System.Windows.Controls.Control.ForegroundProperty, MediaBrushes.White));
         template.Triggers.Add(pressed);
 
@@ -897,20 +948,58 @@ public sealed class OverviewWindow : Window
         }
 
         WindowIconHelper.Forget(hwnd);
+        RemoveCardVisual(hwnd);
         NativeMethods.PostMessage(hwnd, NativeMethods.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-        Dispatcher.BeginInvoke(() =>
+        RefreshAfterClose(hwnd);
+    }
+
+    private void RemoveCardVisual(IntPtr hwnd)
+    {
+        for (var i = _cards.Count - 1; i >= 0; i--)
         {
-            if (_closing)
+            var (card, info) = _cards[i];
+            if (info.Hwnd != hwnd)
             {
-                return;
+                continue;
             }
 
-            _requestRefresh?.Invoke();
-        }, DispatcherPriority.ApplicationIdle);
+            if (VisualTreeHelper.GetParent(card) is System.Windows.Controls.Panel panel)
+            {
+                panel.Children.Remove(card);
+            }
+
+            _cards.RemoveAt(i);
+        }
+    }
+
+    private void RefreshAfterClose(IntPtr hwnd)
+    {
+        var attemptsLeft = 12;
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+        timer.Tick += (_, _) =>
+        {
+            attemptsLeft--;
+            if (_closing || !NativeMethods.IsWindow(hwnd) || attemptsLeft <= 0)
+            {
+                timer.Stop();
+                if (!_closing)
+                {
+                    _requestRefresh?.Invoke();
+                }
+            }
+        };
+        timer.Start();
     }
 
     private void OnCardPreviewMouseDown(object sender, WpfMouseButtonEventArgs e)
     {
+        if (IsCloseChrome(e.OriginalSource as DependencyObject))
+        {
+            _pressCard = null;
+            _suppressClick = true;
+            return;
+        }
+
         if (sender is not Border card || card.Tag is not CardTag tag)
         {
             return;
@@ -1417,7 +1506,7 @@ public sealed class OverviewWindow : Window
 
     private void OnCardClick(object sender, WpfMouseButtonEventArgs e)
     {
-        if (_suppressClick || _manualDragActive)
+        if (_suppressClick || _manualDragActive || IsCloseChrome(e.OriginalSource as DependencyObject))
         {
             _suppressClick = false;
             e.Handled = true;

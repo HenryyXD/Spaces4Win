@@ -103,6 +103,13 @@ public partial class App : Application
                 Dispatcher.Invoke(() => ShowTrayContextMenu(target));
         }
 
+        if (_services.Config.WelcomeRevision < WelcomeWindow.CurrentRevision)
+        {
+            var welcome = new WelcomeWindow(_services, _localization);
+            welcome.Show();
+            MainWindow = null;
+        }
+
         _quitWatch = AppControlChannel.StartListening(() =>
             Dispatcher.BeginInvoke(() =>
             {

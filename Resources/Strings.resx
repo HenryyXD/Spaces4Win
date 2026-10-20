@@ -255,7 +255,14 @@
   <data name="Settings.About.CopyDiagnostics" xml:space="preserve"><value>Copy diagnostics</value></data>
   <data name="Settings.About.CheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Settings.About.DiagnosticsCopied" xml:space="preserve"><value>Diagnostics copied to the clipboard.</value></data>
-  <data name="Settings.About.RepoUrl" xml:space="preserve"><value>https://github.com/OWNER/Spaces4Win</value></data>
+  <data name="Settings.About.RepoUrl" xml:space="preserve"><value>https://github.com/HenryyXD/Spaces4Win</value></data>
+  <data name="Welcome.Title" xml:space="preserve"><value>Spaces4Win is running</value></data>
+  <data name="Welcome.Switch" xml:space="preserve"><value>Switch the monitor under the pointer: {0} (1 through 9).</value></data>
+  <data name="Welcome.Overview" xml:space="preserve"><value>See every space: {0}.</value></data>
+  <data name="Welcome.Indicator" xml:space="preserve"><value>The dots on each monitor are the spaces. Click one to switch. Right-click for more.</value></data>
+  <data name="Welcome.Admin" xml:space="preserve"><value>An app running as administrator (an IDE or a terminal) only follows Spaces4Win if Spaces4Win is elevated too. The first time that happens, you can choose to elevate or to skip those windows.</value></data>
+  <data name="Welcome.GotIt" xml:space="preserve"><value>Got it</value></data>
+  <data name="Welcome.UseCtrlAlt" xml:space="preserve"><value>Use Ctrl+Alt instead of CapsLock</value></data>
   <data name="Status.MoveMode" xml:space="preserve"><value>Move mode: drag indicators. Esc cancels.</value></data>
   <data name="Status.MoveFinished" xml:space="preserve"><value>Indicator positions saved.</value></data>
   <data name="Status.PositionsRestored" xml:space="preserve"><value>Indicator positions restored.</value></data>

@@ -14,7 +14,7 @@ sources: [Services/OverviewService.cs, OverviewWindow.xaml.cs, Overview/]
 - Else open one `OverviewWindow` per connected monitor, sized to work area.
 - Preferred focus monitor = hotkey-resolved monitor id.
 
-Close triggers: Esc, selecting a window, toggling again. **Drag-drop** refreshes overlays in place without closing. While dragging a card, mouse wheel scrolls the overview under the cursor (`CaptureMouse` otherwise blocks it); dragging near the top/bottom edge auto-scrolls.
+Close triggers: Esc, selecting a window, toggling again. The card **X** posts `WM_CLOSE` to that window and leaves the overview open. **Drag-drop** refreshes overlays in place without closing. While dragging a card, mouse wheel scrolls the overview under the cursor (`CaptureMouse` otherwise blocks it); dragging near the top/bottom edge auto-scrolls.
 
 Keyboard while open (via `HotkeyService.OverviewInputFilter` LL hook — does not require WPF focus):
 

@@ -59,6 +59,12 @@ public sealed class AppConfig
     /// <summary>System | en | pt-BR</summary>
     public string Language { get; set; } = "System";
 
+    /// <summary>Dismissed the first-run tips. Missing on older configs, so the tips show once.</summary>
+    public bool HasSeenWelcome { get; set; }
+
+    /// <summary>Bumped when the welcome copy changes, so a dismissed broken tip can show again.</summary>
+    public int WelcomeRevision { get; set; }
+
     /// <summary>Global animation preference for the whole app.</summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public MotionPreference MotionPreference { get; set; } = MotionPreference.FollowSystem;
@@ -452,6 +458,55 @@ public sealed class AppConfig
         9 => Key.D9,
         _ => Key.D1
     };
+
+    /// <summary>
+    /// Replaces CapsLock chords with Ctrl+Alt (other modifiers stay).
+    /// Bindings that already omit CapsLock are left alone.
+    /// </summary>
+    public void UseCtrlAltInsteadOfCapsLock()
+    {
+        foreach (var binding in EnumerateHotkeys())
+        {
+            if (!binding.CapsLock)
+            {
+                continue;
+            }
+
+            binding.CapsLock = false;
+            binding.Modifiers |= ModifierKeys.Control | ModifierKeys.Alt;
+        }
+    }
+
+    public IEnumerable<HotkeyBinding> EnumerateHotkeys()
+    {
+        foreach (var binding in SwitchWorkspaceHotkeys ?? []) yield return binding;
+        foreach (var binding in MoveWindowHotkeys ?? []) yield return binding;
+        foreach (var binding in MoveWindowAndFollowHotkeys ?? []) yield return binding;
+        yield return ToggleLastWorkspaceHotkey;
+        yield return WindowSwitcherHotkey;
+        yield return ToggleStickyHotkey;
+        yield return CompactWorkspacesHotkey;
+        yield return FullscreenWorkspaceHotkey;
+        yield return MoveToFreeWorkspaceHotkey;
+        yield return MoveToFreeWorkspaceFollowHotkey;
+        yield return DeleteWorkspaceHotkey;
+        yield return OverviewHotkey;
+        yield return PreviousWorkspaceHotkey;
+        yield return NextWorkspaceHotkey;
+        yield return ShiftWindowLeftHotkey;
+        yield return ShiftWindowRightHotkey;
+        yield return ShiftWindowFollowLeftHotkey;
+        yield return ShiftWindowFollowRightHotkey;
+        yield return MoveAdjacentLeftHotkey;
+        yield return MoveAdjacentRightHotkey;
+        yield return MoveAdjacentFollowLeftHotkey;
+        yield return MoveAdjacentFollowRightHotkey;
+        yield return FocusPreviousMonitorHotkey;
+        yield return FocusNextMonitorHotkey;
+        yield return PresetBrowserHotkey;
+        foreach (var binding in SavePresetHotkeys ?? []) yield return binding;
+        foreach (var binding in LoadPresetHotkeys ?? []) yield return binding;
+    }
 }
 
 public sealed class MonitorConfig

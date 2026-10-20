@@ -25,6 +25,7 @@ Windows’ built-in Virtual Desktops switch **every monitor at once**. Spaces4Wi
 - **Admin / UIPI handling** — Ask, always elevate, or never ask when elevated windows appear
 - **Start with Windows** — Task Scheduler task (Highest run level when always-elevate is on)
 - **Portable `.exe`** — self-contained; no installer and no separate .NET runtime
+- **Session presets** — save and restore a named layout (can close extras and open missing apps)
 - **English + Portuguese (Brazil)** UI
 
 ---
@@ -33,9 +34,9 @@ Windows’ built-in Virtual Desktops switch **every monitor at once**. Spaces4Wi
 
 1. Open **[Releases](https://github.com/HenryyXD/Spaces4Win/releases)**.
 2. Download `Spaces4Win.exe` from the latest release.
-3. Run it.
+3. Run it. Windows SmartScreen may say the publisher is unknown. That is expected for this portable executable: **More info → Run anyway**.
 
-The app lives in the **system tray**. Left-click the icon (or **Settings…** in the menu) to configure monitors, hotkeys, and appearance.
+The app lives in the **system tray**. The first launch shows four tips (switch, overview, the dots, and administrator windows). Left-click the icon (or **Settings…** in the menu) to configure monitors, hotkeys, and appearance.
 
 ### Requirements
 
@@ -77,9 +78,16 @@ Hotkeys apply to the monitor under the **mouse cursor** (unless noted). All chor
 | `CapsLock+Shift+F` | Move focused window to a free workspace without following |
 | `CapsLock+Ctrl+F` | Move focused window to a free workspace and switch to it |
 | `CapsLock+Backspace` | Delete active workspace (windows move to previous id, else next; cannot delete the last one) |
-| `CapsLock+\`` | Overview (Exposé) on all monitors |
+| `CapsLock+\`` | Overview (Exposé) on all monitors. On ABNT2 this is the key left of `1`; Settings and the first-run window show the label for your keyboard |
+| `CapsLock+P` | Session presets (named layouts) |
+| `CapsLock+Ctrl+Alt+0` … `9` | Save the current layout to that preset slot |
+| `CapsLock+Alt+0` … `9` | Open that preset on the focused monitor |
+
+Saving a preset stores the open windows. Loading one can close extras and **start apps that are not running**. The automatic layout restore at startup never launches anything.
 
 **CapsLock behavior:** while held as part of a chord it does **not** toggle Caps Lock. A CapsLock press/release **without** a chord still toggles it normally.
+
+**Without CapsLock:** the first-run window has **Use Ctrl+Alt instead of CapsLock**. That keeps every key and adds Ctrl+Alt (so switch becomes `Ctrl+Alt+1` … `9`, overview becomes `Ctrl+Alt+\``). The same chords can be edited one by one in **Settings → Hotkeys**.
 
 ---
 
@@ -137,7 +145,7 @@ Trimming (`PublishTrimmed`) is **not** used — WPF relies heavily on reflection
 
 ### Release tags
 
-Pushing a tag `v*` (for example `v0.1.0`) runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which publishes `Spaces4Win.exe` to a GitHub Release.
+Pushing a tag `v*` (for example `v0.2.0`) runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which publishes `Spaces4Win.exe` to a GitHub Release.
 
 ---
 
@@ -160,7 +168,7 @@ Good first directions: accessibility polish, docs/screenshots, edge-case window 
 
 Not commitments — useful if you want to help:
 
-- [ ] First-run tips / short onboarding
+- [x] First-run tips / short onboarding
 - [ ] More transition styles and polish
 - [ ] Better multi-DPI / exotic multi-monitor edge cases
 - [ ] Packaging options beyond portable exe (optional)
@@ -179,7 +187,7 @@ Not commitments — useful if you want to help:
 
 ## Privacy
 
-Spaces4Win runs locally. Settings and window→workspace layout are stored under `%APPDATA%\Spaces4Win\`. There is no telemetry in this repository.
+Spaces4Win runs locally. Settings and window→workspace layout are stored under `%APPDATA%\Spaces4Win\`. A diagnostic log is written to `%APPDATA%\Spaces4Win\logs\spaces4win.log` (Settings → About → Copy diagnostics). There is no telemetry in this repository.
 
 ---
 

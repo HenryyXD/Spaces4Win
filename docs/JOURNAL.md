@@ -15,6 +15,36 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 
 ---
 
+### 2026-10-20 — No new ghost in the diagnostic log
+- Area: visibility
+- Fact: `spaces4win.log` through this session has one warning (elevated relaunch did not start) and breadcrumbs for overview/switch. No new hidden-helper or shell-cloaked class showed up. The conhost, RemoteApp, and suspended Settings filters stay as they are.
+- Source: `%APPDATA%\Spaces4Win\logs\spaces4win.log`
+- Promoted: no
+
+### 2026-10-20 — First-run tips and Ctrl+Alt scheme
+- Area: settings | hotkeys
+- Fact: `HasSeenWelcome` is false until the welcome window closes. `UseCtrlAltInsteadOfCapsLock` clears CapsLock and ORs Ctrl+Alt on every binding that still uses CapsLock. About copies the last 80 lines of `spaces4win.log` and opens `logs\`.
+- Source: `WelcomeWindow`, `AppConfig.UseCtrlAltInsteadOfCapsLock`, `AboutPageViewModel.CopyDiagnostics`
+- Promoted: yes → docs/settings-config.md
+
+### 2026-10-20 — Overview X hover stayed clear and tooltip was boxes
+- Area: overview
+- Fact: Local `Button.Background` outranks a template trigger on the same property, so the Windows red never painted. Set `Border.Background` on the named template border. The tooltip inherited `Segoe MDL2 Assets` from the button and drew "Fechar janela" as missing glyphs; keep that font on the icon `TextBlock` only.
+- Source: `OverviewWindow.CreateCloseButtonStyle`
+- Promoted: no
+
+### 2026-10-20 — Overview card X closed the menu
+- Area: overview
+- Fact: `PreviewMouseLeftButtonDown` on the X set `Handled`, so `Button.Click` never ran. The card mouse-up then called `SelectWindow`, which closes the overview. Leave the preview unhandled, ignore that hit for selection, post `WM_CLOSE`, and refresh after the hwnd is gone.
+- Source: `OverviewWindow.BuildCardHeader`, `CloseManagedWindow`
+- Promoted: overview.md
+
+### 2026-10-20 — Overview search caret stayed at index 0
+- Area: overview
+- Fact: Hook typing replaces `TextBox.Text` via `SetSearchQuery`. WPF resets the caret to 0. Move it to `Text.Length` after the assignment (and again on Input priority).
+- Source: `OverviewWindow.SetSearchQuery`
+- Promoted: no
+
 ### 2026-10-20 — Suspended Settings frame looked open
 - Area: visibility | overview
 - Fact: After Configurações closes, `ApplicationFrameWindow` stays visible to `IsWindowVisible` but `DWM_CLOAKED_SHELL` (value 2). That frame was managed and showed as a card. Shell-cloaked, non-minimized frames are not managed. Our cloak remains `DWM_CLOAKED_APP`.

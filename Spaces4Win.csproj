@@ -10,7 +10,7 @@
     <ApplicationIcon>Assets\Spaces4Win.ico</ApplicationIcon>
     <RootNamespace>Spaces4Win</RootNamespace>
     <AssemblyName>Spaces4Win</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Spaces4Win</Authors>
     <Description>Per-monitor virtual workspace manager for Windows</Description>
     <Product>Spaces4Win</Product>

@@ -58,4 +58,4 @@ body:
     id: extra
     attributes:
       label: Extra context
-      description: Monitor setup, Settings options, screenshots, etc.
+      description: Monitor setup, Settings options, screenshots. Paste the tail of %APPDATA%\Spaces4Win\logs\spaces4win.log (Settings → About → Copy diagnostics).
