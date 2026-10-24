@@ -335,8 +335,8 @@ public sealed class WorkspaceManager
             }
 
             // Hidden conhost/RemoteApp hosts fail the classifier. A console we
-            // SW_HIDE for an inactive space must still be restored.
-            if (!WindowClassifier.IsManagedWindow(hwnd) && !_visibility.WasHiddenByUs(hwnd))
+            // SW_HIDE/cloak for an inactive space must still be restored.
+            if (!WindowClassifier.IsManagedWindow(hwnd) && !IsHiddenBySpaces(hwnd))
             {
                 dropped.Add(hwnd);
                 continue;
@@ -344,9 +344,12 @@ public sealed class WorkspaceManager
 
             if (show)
             {
-                ShowOrDrop(hwnd);
+                if (ShouldAttemptShowAssigned(hwnd))
+                {
+                    ShowOrDrop(hwnd);
+                }
             }
-            else
+            else if (WindowClassifier.IsManagedWindow(hwnd) || IsHiddenBySpaces(hwnd))
             {
                 HideOrDrop(hwnd);
             }
@@ -520,13 +523,22 @@ public sealed class WorkspaceManager
                         continue;
                     }
 
-                    if (NativeMethods.IsWindow(handle) && WindowClassifier.IsManagedWindow(handle))
+                    if (!NativeMethods.IsWindow(handle))
+                    {
+                        RemoveWindow(handle);
+                        continue;
+                    }
+
+                    // Never require IsManagedWindow before show when we hid the HWND —
+                    // borderless console (and similar) can fail classifier heuristics and
+                    // used to RemoveWindow without uncloak → process alive, window gone.
+                    if (ShouldAttemptShowAssigned(handle))
                     {
                         ShowOrDrop(handle);
                     }
                     else
                     {
-                        RemoveWindow(handle);
+                        DropWindowFromWorkspaces(handle);
                     }
                 }
 
@@ -671,13 +683,19 @@ public sealed class WorkspaceManager
         foreach (var hwnd in show)
         {
             var handle = (IntPtr)hwnd;
-            if (NativeMethods.IsWindow(handle) && WindowClassifier.IsManagedWindow(handle))
+            if (!NativeMethods.IsWindow(handle))
+            {
+                RemoveWindow(handle);
+                continue;
+            }
+
+            if (ShouldAttemptShowAssigned(handle))
             {
                 ShowOrDrop(handle);
             }
             else
             {
-                RemoveWindow(handle);
+                DropWindowFromWorkspaces(handle);
             }
         }
 
@@ -925,7 +943,16 @@ public sealed class WorkspaceManager
             ExitOtherFullscreenInWorkspace(monitorId, GetActiveWorkspace(monitorId), exceptHwnd: hwnd);
         }
 
-        _fullscreen.TryEnter(hwnd, bounds);
+        _visibility.BeginInternalOperation();
+        try
+        {
+            _fullscreen.TryEnter(hwnd, bounds);
+        }
+        finally
+        {
+            _visibility.EndInternalOperation();
+        }
+
         RaiseStateChanged();
         return true;
     }
@@ -1061,9 +1088,17 @@ public sealed class WorkspaceManager
             }
         }
 
-        foreach (var (hwnd, bounds) in targets)
+        _visibility.BeginInternalOperation();
+        try
         {
-            _fullscreen.EnsureDesired(hwnd, bounds);
+            foreach (var (hwnd, bounds) in targets)
+            {
+                _fullscreen.EnsureDesired(hwnd, bounds);
+            }
+        }
+        finally
+        {
+            _visibility.EndInternalOperation();
         }
     }
 
@@ -1080,9 +1115,17 @@ public sealed class WorkspaceManager
             bounds = monitor.Bounds;
         }
 
-        foreach (var h in handles)
+        _visibility.BeginInternalOperation();
+        try
         {
-            _fullscreen.EnsureDesired((IntPtr)h, bounds);
+            foreach (var h in handles)
+            {
+                _fullscreen.EnsureDesired((IntPtr)h, bounds);
+            }
+        }
+        finally
+        {
+            _visibility.EndInternalOperation();
         }
     }
 
@@ -1179,9 +1222,19 @@ public sealed class WorkspaceManager
         foreach (var h in show)
         {
             var handle = (IntPtr)h;
-            if (NativeMethods.IsWindow(handle) && WindowClassifier.IsManagedWindow(handle))
+            if (!NativeMethods.IsWindow(handle))
+            {
+                RemoveWindow(handle);
+                continue;
+            }
+
+            if (ShouldAttemptShowAssigned(handle))
             {
                 ShowOrDrop(handle);
+            }
+            else
+            {
+                DropWindowFromWorkspaces(handle);
             }
         }
 
@@ -1428,16 +1481,19 @@ public sealed class WorkspaceManager
 
         foreach (var (handle, show) in actions)
         {
-            if (!NativeMethods.IsWindow(handle) || !WindowClassifier.IsManagedWindow(handle))
+            if (!NativeMethods.IsWindow(handle))
             {
                 continue;
             }
 
             if (show)
             {
-                ShowOrDrop(handle);
+                if (ShouldAttemptShowAssigned(handle))
+                {
+                    ShowOrDrop(handle);
+                }
             }
-            else
+            else if (WindowClassifier.IsManagedWindow(handle) || IsHiddenBySpaces(handle))
             {
                 HideOrDrop(handle);
             }
@@ -1507,7 +1563,8 @@ public sealed class WorkspaceManager
 
     public void AssignWindowToWorkspace(IntPtr hwnd, string monitorId, int workspaceNumber, bool applyVisibility = true)
     {
-        if (!WindowClassifier.IsManagedWindow(hwnd))
+        // Classic console may briefly fail style heuristics after a bad Caps+F; still allow assign.
+        if (!WindowClassifier.IsManagedWindow(hwnd) && !WindowClassifier.IsClassicConsoleWindow(hwnd))
         {
             return;
         }
@@ -1891,22 +1948,23 @@ public sealed class WorkspaceManager
 
         if (WindowVisibilityService.IsAppTrayHidden(hwnd) && !_visibility.WasHiddenByUs(hwnd))
         {
-            DropWindowFromWorkspaces(hwnd);
+            DropWindowFromWorkspaces(hwnd, revealIfHiddenByUs: false);
             return;
         }
 
         // Tray residence while we did not SW_HIDE (still on active space after minimize).
         if (WindowClassifier.IsTrayResidentProcess(hwnd))
         {
-            DropWindowFromWorkspaces(hwnd);
+            DropWindowFromWorkspaces(hwnd, revealIfHiddenByUs: false);
             return;
         }
 
         if (!WindowClassifier.IsManagedWindow(hwnd))
         {
             // SW_HIDE of a real console clears visibility, so the helper-host
-            // rule rejects it. Keep it until we show the workspace again.
-            if (_visibility.WasHiddenByUs(hwnd))
+            // rule rejects it. Keep Spaces-hidden HWNDs until we show again
+            // (do not Forget/Drop — that used to strand cloaked consoles).
+            if (IsHiddenBySpaces(hwnd))
             {
                 return;
             }
@@ -1966,17 +2024,139 @@ public sealed class WorkspaceManager
             if (WindowClassifier.LooksLikeTrayToolWindow(hwnd))
             {
                 // Leave SW_HID / tray-hidden — do not ForceReveal.
-                DropWindowFromWorkspaces(hwnd);
+                DropWindowFromWorkspaces(hwnd, revealIfHiddenByUs: false);
             }
 
             return;
         }
 
-        DropWindowFromWorkspaces(hwnd);
+        DropWindowFromWorkspaces(hwnd, revealIfHiddenByUs: false);
     }
 
-    private void DropWindowFromWorkspaces(IntPtr hwnd)
+    /// <summary>
+    /// Reveal stranded / Spaces-hidden windows and place them on the active workspace
+    /// of the hotkey (or primary) monitor. Returns how many HWNDs were rescued.
+    /// </summary>
+    public int RescueHiddenWindowsToActiveWorkspace()
     {
+        if (!_commandsEnabled)
+        {
+            return 0;
+        }
+
+        var monitorInfo = ResolveHotkeyMonitor()
+                          ?? _monitorTracker.Monitors.FirstOrDefault(m => m.IsPrimary)
+                          ?? _monitorTracker.Monitors.FirstOrDefault();
+        if (monitorInfo is null)
+        {
+            return 0;
+        }
+
+        var monitorId = monitorInfo.DeviceName;
+        int activeWs;
+        lock (_sync)
+        {
+            if (!_monitors.TryGetValue(monitorId, out var monitor))
+            {
+                return 0;
+            }
+
+            activeWs = monitor.ActiveWorkspace;
+        }
+
+        var candidates = new HashSet<nint>();
+        foreach (var (hwnd, ownership) in _visibility.Snapshot())
+        {
+            if (ownership == VisibilityOwnership.HiddenBySpaces4Win || _visibility.WasHiddenByUs(hwnd))
+            {
+                candidates.Add(hwnd);
+            }
+        }
+
+        NativeMethods.EnumWindows((h, _) =>
+        {
+            if (!NativeMethods.IsWindow(h))
+            {
+                return true;
+            }
+
+            var cloaked = WindowClassifier.IsCloaked(h);
+            var invisible = !NativeMethods.IsWindowVisible(h) && !NativeMethods.IsIconic(h);
+            if (!cloaked && !invisible)
+            {
+                return true;
+            }
+
+            if (WindowClassifier.LooksLikeTrayToolWindow(h) || WindowClassifier.IsTrayResidentProcess(h))
+            {
+                return true;
+            }
+
+            if (WindowClassifier.IsManagedWindow(h) ||
+                WindowClassifier.IsClassicConsoleWindow(h) ||
+                IsOnAnyWorkspace(h))
+            {
+                candidates.Add(h);
+            }
+
+            return true;
+        }, IntPtr.Zero);
+
+        var rescued = 0;
+        foreach (var hwnd in candidates)
+        {
+            var handle = (IntPtr)hwnd;
+            if (!NativeMethods.IsWindow(handle))
+            {
+                continue;
+            }
+
+            _visibility.ForceRevealNoActivate(new[] { handle });
+
+            // Exit broken borderless / restore caption before classifier + assign.
+            if (_fullscreen.IsManagedFullscreen(handle) || _fullscreen.IsDesired(handle))
+            {
+                _visibility.BeginInternalOperation();
+                try
+                {
+                    _fullscreen.TryExitToMaximized(handle);
+                }
+                finally
+                {
+                    _visibility.EndInternalOperation();
+                }
+            }
+            else
+            {
+                _fullscreen.Forget(handle);
+            }
+
+            if (!WindowClassifier.IsManagedWindow(handle) && !WindowClassifier.IsClassicConsoleWindow(handle))
+            {
+                DropWindowFromWorkspaces(handle, revealIfHiddenByUs: false);
+                continue;
+            }
+
+            AssignWindowToWorkspace(handle, monitorId, activeWs, applyVisibility: true);
+            rescued++;
+        }
+
+        if (rescued > 0)
+        {
+            RaiseWorkspaceChanged(monitorId);
+            RaiseStateChanged();
+        }
+
+        return rescued;
+    }
+
+    private void DropWindowFromWorkspaces(IntPtr hwnd, bool revealIfHiddenByUs = true)
+    {
+        if (revealIfHiddenByUs && IsHiddenBySpaces(hwnd))
+        {
+            _visibility.ForceRevealNoActivate(new[] { hwnd });
+        }
+
         _visibility.Forget(hwnd);
         if (!RemoveWindow(hwnd))
         {
@@ -1991,6 +2171,17 @@ public sealed class WorkspaceManager
         RaiseStateChanged();
     }
 
+    private bool IsHiddenBySpaces(IntPtr hwnd) =>
+        _visibility.WasHiddenByUs(hwnd) ||
+        _visibility.GetOwnership(hwnd) == VisibilityOwnership.HiddenBySpaces4Win;
+
+    /// <summary>
+    /// Show path must not require <see cref="WindowClassifier.IsManagedWindow"/> when we
+    /// still own a hide — otherwise a half-stripped console stays cloaked forever.
+    /// </summary>
+    private bool ShouldAttemptShowAssigned(IntPtr hwnd) =>
+        WindowClassifier.IsManagedWindow(hwnd) || IsHiddenBySpaces(hwnd);
+
     private void ShowOrDrop(IntPtr hwnd)
     {
         if (!_visibility.ShowForWorkspace(hwnd))
@@ -2003,7 +2194,7 @@ public sealed class WorkspaceManager
     {
         if (!_visibility.HideForWorkspace(hwnd))
         {
-            DropWindowFromWorkspaces(hwnd);
+            DropWindowFromWorkspaces(hwnd, revealIfHiddenByUs: false);
         }
     }
 

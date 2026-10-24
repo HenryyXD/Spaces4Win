@@ -1,4 +1,5 @@
 using System.Drawing;
+using Spaces4Win.Core;
 using Spaces4Win.Native;
 
 namespace Spaces4Win.Services;
@@ -6,6 +7,8 @@ namespace Spaces4Win.Services;
 /// <summary>
 /// Session-scoped borderless fullscreen for managed windows (Caps+F).
 /// Strips caption/thickframe and sizes to monitor Bounds; restores to maximized on exit.
+/// Classic console hosts fall back to soft maximize (no chrome strip) because conhost
+/// clamps size to the character grid and will not cover the taskbar.
 /// </summary>
 public sealed class WindowFullscreenService
 {
@@ -32,6 +35,15 @@ public sealed class WindowFullscreenService
         lock (_sync)
         {
             return _states.TryGetValue(hwnd, out var s) && s.Desired;
+        }
+    }
+
+    /// <summary>True when Caps+F used maximize-only (console / failed borderless).</summary>
+    public bool IsSoftMaximize(IntPtr hwnd)
+    {
+        lock (_sync)
+        {
+            return _states.TryGetValue(hwnd, out var s) && s.IsManaged && !s.UsedBorderless;
         }
     }
 
@@ -102,6 +114,12 @@ public sealed class WindowFullscreenService
             NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
         }
 
+        // Classic PowerShell/cmd conhost cannot reliably fill monitor Bounds after chrome strip.
+        if (WindowClassifier.IsClassicConsoleWindow(hwnd))
+        {
+            return EnterSoftMaximize(hwnd);
+        }
+
         var stylePtr = NativeMethods.GetWindowLongPtrCompat(hwnd, NativeMethods.GWL_STYLE);
         var style = unchecked((int)stylePtr.ToInt64());
 
@@ -120,6 +138,7 @@ public sealed class WindowFullscreenService
 
             state.Desired = true;
             state.IsManaged = true;
+            state.UsedBorderless = true;
         }
 
         var borderless = style & ~ChromeMask;
@@ -134,7 +153,15 @@ public sealed class WindowFullscreenService
             bounds.Width,
             bounds.Height,
             NativeMethods.SWP_NOZORDER | NativeMethods.SWP_FRAMECHANGED);
-        return true;
+
+        if (IsGeometricFullscreen(hwnd, bounds))
+        {
+            return true;
+        }
+
+        // App rejected full Bounds (console-like clamping, DPI quirks, etc.): restore chrome
+        // and fall back to maximize so we never leave a half-stripped stranded HWND.
+        return RollbackBorderlessToSoftMaximize(hwnd);
     }
 
     public bool TryExitToMaximized(IntPtr hwnd)
@@ -145,6 +172,7 @@ public sealed class WindowFullscreenService
         }
 
         int? restoreStyle = null;
+        var usedBorderless = false;
         lock (_sync)
         {
             if (_states.TryGetValue(hwnd, out var state))
@@ -152,17 +180,19 @@ public sealed class WindowFullscreenService
                 if (state.IsManaged)
                 {
                     restoreStyle = state.SavedStyle;
+                    usedBorderless = state.UsedBorderless;
                 }
 
                 _states.Remove(hwnd);
             }
         }
 
-        if (restoreStyle is int saved)
+        if (usedBorderless && restoreStyle is int saved)
         {
             NativeMethods.SetWindowLongPtrCompat(hwnd, NativeMethods.GWL_STYLE, new IntPtr(saved));
+            NativeMethods.ApplyExtendedStyleFrame(hwnd);
         }
-        else
+        else if (usedBorderless)
         {
             var stylePtr = NativeMethods.GetWindowLongPtrCompat(hwnd, NativeMethods.GWL_STYLE);
             var style = unchecked((int)stylePtr.ToInt64());
@@ -171,9 +201,10 @@ public sealed class WindowFullscreenService
                 style |= ChromeMask;
                 NativeMethods.SetWindowLongPtrCompat(hwnd, NativeMethods.GWL_STYLE, new IntPtr(style));
             }
+
+            NativeMethods.ApplyExtendedStyleFrame(hwnd);
         }
 
-        NativeMethods.ApplyExtendedStyleFrame(hwnd);
         NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWMAXIMIZED);
         return true;
     }
@@ -209,11 +240,22 @@ public sealed class WindowFullscreenService
 
     /// <summary>
     /// Re-enter borderless for desired windows that are currently shown (active workspace).
+    /// Soft-maximize entries are left alone (geometry will never match full Bounds).
     /// </summary>
     public void EnsureDesired(IntPtr hwnd, Rectangle bounds)
     {
         if (!IsDesired(hwnd) || !NativeMethods.IsWindow(hwnd))
         {
+            return;
+        }
+
+        if (IsSoftMaximize(hwnd))
+        {
+            if (!NativeMethods.IsZoomed(hwnd) && !NativeMethods.IsIconic(hwnd))
+            {
+                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWMAXIMIZED);
+            }
+
             return;
         }
 
@@ -233,10 +275,59 @@ public sealed class WindowFullscreenService
         }
     }
 
+    private bool EnterSoftMaximize(IntPtr hwnd)
+    {
+        var stylePtr = NativeMethods.GetWindowLongPtrCompat(hwnd, NativeMethods.GWL_STYLE);
+        var style = unchecked((int)stylePtr.ToInt64());
+
+        lock (_sync)
+        {
+            if (!_states.TryGetValue(hwnd, out var state))
+            {
+                state = new FullscreenState();
+                _states[hwnd] = state;
+            }
+
+            if (!state.IsManaged)
+            {
+                state.SavedStyle = style;
+            }
+
+            state.Desired = true;
+            state.IsManaged = true;
+            state.UsedBorderless = false;
+        }
+
+        NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWMAXIMIZED);
+        return true;
+    }
+
+    private bool RollbackBorderlessToSoftMaximize(IntPtr hwnd)
+    {
+        int savedStyle;
+        lock (_sync)
+        {
+            if (!_states.TryGetValue(hwnd, out var state) || !state.IsManaged)
+            {
+                return EnterSoftMaximize(hwnd);
+            }
+
+            savedStyle = state.SavedStyle;
+            state.UsedBorderless = false;
+        }
+
+        NativeMethods.SetWindowLongPtrCompat(hwnd, NativeMethods.GWL_STYLE, new IntPtr(savedStyle));
+        NativeMethods.ApplyExtendedStyleFrame(hwnd);
+        NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOWMAXIMIZED);
+        return true;
+    }
+
     private sealed class FullscreenState
     {
         public bool Desired;
         public bool IsManaged;
         public int SavedStyle;
+        /// <summary>False = maximize-only (console / failed Bounds fit).</summary>
+        public bool UsedBorderless = true;
     }
 }

@@ -84,6 +84,46 @@ public sealed class FullscreenWorkspacePolicyTests
     }
 }
 
+public sealed class WindowFullscreenServiceSoftMaximizeTests
+{
+    [Fact]
+    public void IsClassicConsoleWindow_FalseForInvalidHwnd()
+    {
+        Assert.False(WindowClassifier.IsClassicConsoleWindow(IntPtr.Zero));
+        Assert.False(WindowClassifier.IsClassicConsoleWindow(new IntPtr(1)));
+    }
+
+    [Fact]
+    public void TryEnter_InvalidHwnd_ReturnsFalse_AndLeavesNoState()
+    {
+        var fs = new WindowFullscreenService();
+        Assert.False(fs.TryEnter(IntPtr.Zero, new System.Drawing.Rectangle(0, 0, 1920, 1080)));
+        Assert.False(fs.IsManagedFullscreen(IntPtr.Zero));
+        Assert.False(fs.IsDesired(IntPtr.Zero));
+    }
+
+    [Fact]
+    public void MarkDesired_ThenForget_ClearsTracking()
+    {
+        var fs = new WindowFullscreenService();
+        var hwnd = new IntPtr(99);
+        fs.MarkDesired(hwnd, desired: true);
+        Assert.True(fs.IsDesired(hwnd));
+        Assert.True(fs.ShouldPersistFullscreen(hwnd));
+        fs.Forget(hwnd);
+        Assert.False(fs.IsDesired(hwnd));
+        Assert.False(fs.ShouldPersistFullscreen(hwnd));
+    }
+
+    [Fact]
+    public void IsGeometricFullscreen_FalseWhenIconicOrInvalid()
+    {
+        Assert.False(WindowFullscreenService.IsGeometricFullscreen(
+            IntPtr.Zero,
+            new System.Drawing.Rectangle(0, 0, 100, 100)));
+    }
+}
+
 public sealed class LayoutFullscreenPersistenceTests
 {
     [Fact]

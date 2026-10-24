@@ -10,7 +10,10 @@
   <data name="Tray.Settings" xml:space="preserve"><value>Configurações…</value></data>
   <data name="Tray.MoveIndicators" xml:space="preserve"><value>Mover indicadores</value></data>
   <data name="Tray.FinishMoveIndicators" xml:space="preserve"><value>Concluir mover</value></data>
+  <data name="Tray.RescueHidden" xml:space="preserve"><value>Resgatar janelas ocultas</value></data>
   <data name="Tray.Exit" xml:space="preserve"><value>Sair</value></data>
+  <data name="Status.RescuedHidden" xml:space="preserve"><value>Resgatou {0} janela(s) oculta(s) para este workspace.</value></data>
+  <data name="Status.RescuedHiddenNone" xml:space="preserve"><value>Nenhuma janela oculta para resgatar.</value></data>
   <data name="Common.Save" xml:space="preserve"><value>Salvar</value></data>
   <data name="Common.Cancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="Common.Close" xml:space="preserve"><value>Fechar</value></data>

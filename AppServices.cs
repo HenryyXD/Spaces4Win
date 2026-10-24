@@ -265,6 +265,22 @@ public sealed class AppServices : IDisposable
 
     public event EventHandler<string>? StatusMessage;
 
+    /// <summary>UI toast / status line (tray actions, etc.).</summary>
+    public void NotifyStatus(string message, string? monitorId = null)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        if (IndicatorService is not null)
+        {
+            IndicatorService.ShowStatusToast(monitorId, message);
+        }
+
+        StatusMessage?.Invoke(this, message);
+    }
+
     public void SaveAndApply(AppConfig config)
     {
         if (!IsRunning || WorkspaceManager is null || HotkeyService is null)

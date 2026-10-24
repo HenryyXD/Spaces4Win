@@ -34,6 +34,8 @@ Show paths use **no activate** (`SW_SHOWNA` / uncloak) unless an explicit activa
 
 **Do not** `Forget` a Spaces4Win-hidden HWND without revealing — after iconic `SW_HIDE`, `IsIconic` may clear and size/title heuristics can reject the window; treat `WS_MINIMIZE` like iconic and keep pending restore until show or a true tray `TOOLWINDOW` hide.
 
+Show paths must not require `IsManagedWindow` when ownership is still `HiddenBySpaces4Win` / `WasHiddenByUs` (borderless console can fail heuristics → `RemoveWindow` without uncloak strands the process). `DropWindowFromWorkspaces` ForceReveals before Forget unless the drop is an intentional tray unmanage. Tray menu **Rescue hidden windows** enumerates cloaked/invisible candidates onto the active workspace.
+
 Init adopts visible **or** iconic windows. Overview may show “Minimized” for taskbar-minimized participants.
 
 ### Internal operations

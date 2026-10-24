@@ -78,6 +78,21 @@ public static class WindowClassifier
     }
 
     /// <summary>
+    /// Classic conhost (<c>ConsoleWindowClass</c>). Borderless Bounds sizing is unreliable
+    /// (character-cell clamping); Caps+F should soft-maximize instead.
+    /// Windows Terminal uses a normal hosting HWND and is not matched here.
+    /// </summary>
+    public static bool IsClassicConsoleWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero || !NativeMethods.IsWindow(hwnd))
+        {
+            return false;
+        }
+
+        return string.Equals(GetClassName(hwnd), "ConsoleWindowClass", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// WS_EX_TOOLWINDOW without WS_EX_APPWINDOW — common after ShowInTaskbar=false / tray hide.
     /// Safe after our SW_HIDE (unlike MainWindowHandle).
     /// </summary>

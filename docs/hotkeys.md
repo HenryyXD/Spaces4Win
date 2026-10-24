@@ -28,7 +28,7 @@ Move / sticky / compact / fullscreen / delete / insert typically call `Workspace
 
 `CapsLock+R` → `CompactWorkspaces(ResolveMonitorIdForHotkeys())`: densify sparse ids to `1…N` on that monitor only (sticky unchanged).
 
-`CapsLock+F` → `ToggleFullscreenInPlace()`: enter/exit borderless fullscreen on the current workspace (no move). Flag persists in `window-layout.json` (`isFullscreen`); shutdown exits chrome before reveal.
+`CapsLock+F` → `ToggleFullscreenInPlace()`: enter/exit borderless fullscreen on the current workspace (no move). Flag persists in `window-layout.json` (`isFullscreen`); shutdown exits chrome before reveal. Classic conhost (`ConsoleWindowClass`) soft-maximizes instead (Bounds fill is unreliable); failed borderless geometry also rolls back to maximize.
 
 `CapsLock+Shift+F` → `MoveActiveWindowToFreeWorkspace(follow: false)`: send focused window to a free/empty (or least-busy) workspace without switching.
 

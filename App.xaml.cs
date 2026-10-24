@@ -189,6 +189,7 @@ public partial class App : Application
         var menu = new ContextMenu();
         menu.Items.Add(CreateMenuItem(loc.Get("Tray.Settings"), OpenSettings_Click));
         menu.Items.Add(CreateMenuItem(moveLabel, ToggleMoveIndicators_Click));
+        menu.Items.Add(CreateMenuItem(loc.Get("Tray.RescueHidden"), RescueHidden_Click));
         menu.Items.Add(new Separator());
         menu.Items.Add(CreateMenuItem(loc.Get("Tray.Exit"), Exit_Click));
         return menu;
@@ -264,6 +265,20 @@ public partial class App : Application
         }
 
         _services?.BeginMoveIndicators();
+    }
+
+    private void RescueHidden_Click(object sender, RoutedEventArgs e)
+    {
+        if (_services?.WorkspaceManager is null || _localization is null)
+        {
+            return;
+        }
+
+        var count = _services.WorkspaceManager.RescueHiddenWindowsToActiveWorkspace();
+        var message = count > 0
+            ? _localization.Format("Status.RescuedHidden", count)
+            : _localization.Get("Status.RescuedHiddenNone");
+        _services.NotifyStatus(message);
     }
 
     private void NotifyIcon_TrayLeftMouseUp(object sender, RoutedEventArgs e) => ShowSettings();

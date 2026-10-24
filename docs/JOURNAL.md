@@ -15,6 +15,12 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 
 ---
 
+### 2026-10-24 — Caps+F console + stranded hide reveal
+- Area: fullscreen | visibility
+- Fact: Classic `ConsoleWindowClass` (PowerShell/cmd) cannot fill monitor Bounds after chrome strip (cell-grid clamp; taskbar stays). Caps+F now soft-maximizes consoles and rolls back any failed borderless enter. Switch/show no longer requires `IsManagedWindow` before revealing Spaces-hidden HWNDs; `DropWindowFromWorkspaces` ForceReveals before Forget when we hid. Tray: “Rescue hidden windows” → `RescueHiddenWindowsToActiveWorkspace`.
+- Source: `WindowFullscreenService`, `WorkspaceManager`, `WindowClassifier.IsClassicConsoleWindow`, `App.xaml.cs` tray
+- Promoted: yes → docs/visibility.md, docs/hotkeys.md
+
 ### 2026-10-20 — No new ghost in the diagnostic log
 - Area: visibility
 - Fact: `spaces4win.log` through this session has one warning (elevated relaunch did not start) and breadcrumbs for overview/switch. No new hidden-helper or shell-cloaked class showed up. The conhost, RemoteApp, and suspended Settings filters stay as they are.
@@ -74,6 +80,7 @@ Promote durable facts into topic files; leave a one-line pointer here if useful.
 - Fact: Invisible `ConsoleWindowClass` (`node`, `wslhost`) and `TscShellContainerClass` (`RemoteApp` / `msrdc`) were managed because they have a title and a normal rect, so they showed up as overview cards. Visible, minimized, or cloaked consoles stay managed. Workspace restore still applies when `WasHiddenByUs` even if the classifier rejects the HWND.
 - Source: `WindowClassifier.IsInvisibleHelperHost`, `WorkspaceManager.ApplyVisibilityFromAssignments`
 - Promoted: yes → docs/visibility.md
+
 
 ### 2026-08-16 — Session presets (named layouts)
 - Area: presets | hotkeys | settings
